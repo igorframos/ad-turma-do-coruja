@@ -37,6 +37,19 @@ int main(int argc, char *argv[])
 
     printf (">> %f\n", y / 30);
 
+    std::set<evento> s;
+    for (int i = 0; i < 20; ++i)
+    {
+        s.insert(evento(i, g.randExponencial(lambda)));
+    }
+
+    for (std::set<evento>::iterator i = s.begin(); i != s.end(); ++i)
+    {
+        printf ("%f %d %s --> %u\n", i->tempo(), i->tipo(), i->strTipo().c_str(), i->id());
+    }
+
+    printf ("%d\n", evento::CHEGADA_PEER);
+
     return 0;
 }
 
