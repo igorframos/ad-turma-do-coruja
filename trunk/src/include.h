@@ -9,5 +9,6 @@
 #include <algorithm>
 #include <ctime>
 
+#include "evento.h"
 #include "geradorAleatorio.h"
 
