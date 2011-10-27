@@ -1,6 +1,8 @@
 #include "evento.h"
 
-evento::evento (int tp, double t) : tp(tp), t(t) {}
+unsigned int evento::nextId;
+
+evento::evento (int tp, double t) : tp(tp), t(t), k(nextId++) {}
 
 bool evento::operator< (const evento& b) const
 {
@@ -29,8 +31,6 @@ std::string evento::strTipo() const
     {
         case CHEGADA_PEER:
             return "Chegada de peer";
-        case SAIDA_PEER:
-            return "Saída de peer";
         case TRANSMISSAO:
             return "Transmissão";
         default:

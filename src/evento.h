@@ -5,9 +5,10 @@
 
 class evento
 {
-    int tp;
-    double t;
-    unsigned int k;
+    protected:
+        int tp;
+        double t;
+        unsigned int k;
 
     public:
         evento(int tp, double t);
@@ -19,8 +20,9 @@ class evento
         unsigned int id() const;
         std::string strTipo() const;
 
-        enum tipoEvento{CHEGADA_PEER, SAIDA_PEER, TRANSMISSAO};
+        enum tipoEvento{CHEGADA_PEER, TRANSMISSAO};
 
+        static unsigned int nextId;
 };
 
 #endif

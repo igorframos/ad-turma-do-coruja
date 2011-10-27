@@ -8,7 +8,11 @@
 #include <set>
 #include <algorithm>
 #include <ctime>
+#include <list>
 
+#include "pessoa.h"
 #include "evento.h"
+#include "eventoTransmissao.h"
+#include "eventoChegadaPeer.h"
 #include "geradorAleatorio.h"
 
