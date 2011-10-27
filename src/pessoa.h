@@ -20,6 +20,8 @@ class pessoa
         unsigned int blocosFaltantes() const;
         unsigned int blocosPossiveis(const pessoa& p) const;
 
+        void viraSeed();
+
         std::string strTipo() const;
 
         enum tipoPessoa{PUBLISHER, PEER, SEED};

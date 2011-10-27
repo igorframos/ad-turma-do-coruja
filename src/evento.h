@@ -12,6 +12,7 @@ class evento
 
     public:
         evento(int tp, double t);
+        virtual ~evento();
 
         bool operator<(const evento& b) const;
  
@@ -20,7 +21,7 @@ class evento
         unsigned int id() const;
         std::string strTipo() const;
 
-        enum tipoEvento{CHEGADA_PEER, TRANSMISSAO};
+        enum tipoEvento{CHEGADA_PEER, SAIDA_PEER, TRANSMISSAO};
 
         static unsigned int nextId;
 };

@@ -45,6 +45,11 @@ unsigned int pessoa::blocosFaltantes() const
     return __builtin_popcount(b ^ arqCompleto);
 }
 
+void pessoa::viraSeed()
+{
+    tp = SEED;
+}
+
 std::string pessoa::strTipo() const
 {
     switch(tp)

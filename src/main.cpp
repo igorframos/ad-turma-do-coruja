@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     double lambda = 0.5;
 
     double y = 0;
-    for (int i = 0; i < 30; ++i)
+    for (int i = 0; i < 5; ++i)
     {
         double x = 0;
         for (int i = 0; i < (1 << 22); ++i)
@@ -42,37 +42,42 @@ int main(int argc, char *argv[])
 
     pessoa pub(pessoa::PUBLISHER);
 
-    std::set<evento> s;
+    std::set<evento*> s;
 
-    s.insert(eventoTransmissao(g.randExponencial(lambda), &pub));
+    s.insert(new eventoTransmissao(g.randExponencial(lambda), &pub));
     for (int i = 0; i < 20; ++i)
     {
-        if (g.randUniforme() % 2)
-            s.insert(eventoChegadaPeer(g.randExponencial(lambda)));
+        unsigned int p = g.randUniforme() % 3;
+        if (p == 0)
+            s.insert(new eventoChegadaPeer(g.randExponencial(lambda)));
+        else if (p == 1)
+            s.insert(new eventoTransmissao(g.randExponencial(lambda), new pessoa(pessoa::PEER)));
         else
-            s.insert(eventoTransmissao(g.randExponencial(lambda), new pessoa(pessoa::PEER)));
+            s.insert(new eventoSaidaSeed(g.randExponencial(lambda), new pessoa(pessoa::SEED)));
     }
 
-    for (std::set<evento>::iterator i = s.begin(); i != s.end(); ++i)
+    for (std::set<evento*>::iterator it = s.begin(); it != s.end(); ++it)
     {
-        printf ("%f %d %s --> %u\n", i->tempo(), i->tipo(), i->strTipo().c_str(), i->id());
+        evento *i = *it;
+        printf ("%f %d %s --> %u -->\t", i->tempo(), i->tipo(), i->strTipo().c_str(), i->id());
         if (i->tipo() == evento::CHEGADA_PEER)
         {
-            eventoChegadaPeer a = (eventoChegadaPeer) *i;
-            printf ("\tChegou peer novo na parada! \\o/\n");
+            eventoChegadaPeer a = dynamic_cast<eventoChegadaPeer&>(*i);
+            printf ("Chegou peer novo na parada! \\o/\n");
         }
         else if (i->tipo() == evento::TRANSMISSAO)
         {
-            eventoTransmissao a = (eventoTransmissao) *i;
+            eventoTransmissao a = dynamic_cast<eventoTransmissao&>(*i);
             pessoa p = a.origem();
 
-            printf ("\tOrigem: %u, %s. Arquivo: %x. Faltam %u blocos.\n", p.id(), p.strTipo().c_str(), p.blocos(), p.blocosFaltantes());
+            printf ("Origem: %u, %s. Arquivo: %x. Faltam %u blocos.\n", p.id(), p.strTipo().c_str(), p.blocos(), p.blocosFaltantes());
+        }
+        else if (i->tipo() == evento::SAIDA_PEER)
+        {
+            eventoSaidaSeed a = dynamic_cast<eventoSaidaSeed&>(*i);
+            printf ("Cara %d vai embora. =(\n", a.seed().id());
         }
     }
-
-    printf ("%d\n", evento::CHEGADA_PEER);
-
-    //std::list<evento>
 
     return 0;
 }
