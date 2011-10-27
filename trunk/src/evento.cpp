@@ -4,6 +4,8 @@ unsigned int evento::nextId;
 
 evento::evento (int tp, double t) : tp(tp), t(t), k(nextId++) {}
 
+evento::~evento() {}
+
 bool evento::operator< (const evento& b) const
 {
     if (t != b.tempo()) return t < b.tempo();
@@ -33,6 +35,8 @@ std::string evento::strTipo() const
             return "Chegada de peer";
         case TRANSMISSAO:
             return "Transmissão";
+        case SAIDA_PEER:
+            return "Saída de peer";
         default:
             return "Não reconheci o tipo";
     }

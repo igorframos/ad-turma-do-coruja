@@ -12,10 +12,10 @@ unsigned int geradorAleatorio::randUniforme()
     return seed = (unsigned int) tmp;
 }
 
-double geradorAleatorio::randExponencial(double mean)
+double geradorAleatorio::randExponencial(double media)
 {
     double u = randUniforme() / (double) RANDMAX; 
 
-    return - log(u) * mean;
+    return - log(u) * media;
 }
 

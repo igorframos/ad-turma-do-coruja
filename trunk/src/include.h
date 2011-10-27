@@ -12,6 +12,7 @@
 
 #include "pessoa.h"
 #include "evento.h"
+#include "eventoSaidaSeed.h"
 #include "eventoTransmissao.h"
 #include "eventoChegadaPeer.h"
 #include "geradorAleatorio.h"
