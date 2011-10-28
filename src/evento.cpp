@@ -8,7 +8,7 @@ evento::~evento() {}
 
 bool evento::operator< (const evento& b) const
 {
-    if (t != b.tempo()) return t < b.tempo();
+    if (tempo() != b.tempo()) return t < b.tempo();
     return k < b.id();
 }
 
@@ -17,12 +17,12 @@ int evento::tipo() const
     return tp;
 }
 
-inline unsigned int evento::id() const
+unsigned int evento::id() const
 {
     return k;
 }
 
-inline double evento::tempo() const
+double evento::tempo() const
 {
     return t;
 }

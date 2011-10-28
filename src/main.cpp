@@ -5,8 +5,19 @@ int main(int argc, char *argv[])
     unsigned int seed = time(NULL);
     evento::nextId = 0;
     pessoa::nextId = 0;
-    pessoa::arqCompleto = 0xff;
+    pessoa::arqCompleto = 0x3;
 
+    filaEventos f(1/0.5, 1/0.1, 1/0.1, 1/1, 0.5, filaEventos::RANDOM_PEER, filaEventos::RANDOM_PIECE);
+
+    int ini = time(NULL);
+    while (f.haEvento())
+    {
+        f.trataProximoEvento();
+        printf ("--------------------------> Pessoas no sistema: %u\n", f.pessoasNoSistema());
+        if (time(NULL) - ini > 600) break;
+    }
+
+    /*
     geradorAleatorio g(seed);
 
     unsigned int r;
@@ -78,6 +89,7 @@ int main(int argc, char *argv[])
             printf ("Cara %d vai embora. =(\n", a.seed().id());
         }
     }
+    */
 
     return 0;
 }
