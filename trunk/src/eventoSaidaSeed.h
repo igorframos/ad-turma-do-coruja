@@ -6,12 +6,13 @@
 
 class eventoSaidaSeed : public evento
 {
-    pessoa *p;
+    const pessoa *p;
 
     public:
-        eventoSaidaSeed(double t, pessoa *p);
+        eventoSaidaSeed(double t, const pessoa *p);
 
         pessoa seed() const;
+        const pessoa *ptr() const;
 };
 
 #endif

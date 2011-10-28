@@ -24,6 +24,8 @@ class pessoa
 
         std::string strTipo() const;
 
+        bool operator<(const pessoa& p) const;
+
         enum tipoPessoa{PUBLISHER, PEER, SEED};
 
         static unsigned int nextId;

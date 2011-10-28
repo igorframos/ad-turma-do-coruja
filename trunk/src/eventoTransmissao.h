@@ -6,12 +6,13 @@
 
 class eventoTransmissao : public evento
 {
-    pessoa* p;
+    const pessoa* p;
 
     public:
-        eventoTransmissao(double t, pessoa* p);
+        eventoTransmissao(double t, const pessoa* p);
 
         pessoa origem() const;
+        const pessoa *ptr() const;
 };
 
 #endif

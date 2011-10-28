@@ -50,6 +50,11 @@ void pessoa::viraSeed()
     tp = SEED;
 }
 
+bool pessoa::operator<(const pessoa& p) const
+{
+    return id() < p.id();
+}
+
 std::string pessoa::strTipo() const
 {
     switch(tp)
