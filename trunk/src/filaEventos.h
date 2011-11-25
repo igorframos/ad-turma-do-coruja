@@ -53,13 +53,14 @@ class filaEventos
         bool haEvento();
         void trataProximoEvento();
         unsigned int pessoasNoSistema();
+        unsigned int peersNoSistema();
         unsigned int chegadasTotais();
         unsigned int saidasTotais();
 
         enum politicas{RANDOM_PEER, RANDOM_PIECE, RAREST_FIRST};
 };
 
-std::string binario(unsigned int x);
+std::string binario(unsigned int x, unsigned int alg);
 
 #endif
 
