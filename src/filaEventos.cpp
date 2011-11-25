@@ -300,10 +300,10 @@ std::string binario(unsigned int x)
 
     while (x / 2)
     {
-        ansr.push_back((char) x % 2 + '0');
+        ansr.push_back((char) (x % 2) + '0');
         x /= 2;
     }
 
-    return std::string(ansr.rbegin(), ansr.rend());
+    return ansr;
 }
 
