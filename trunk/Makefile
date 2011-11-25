@@ -44,6 +44,9 @@ obj/geradorAleatorio.o: src/geradorAleatorio.cpp src/geradorAleatorio.h
 run: bin/sim
 	./bin/sim >./bin/sim.out
 
+debug: bin/sim
+	gdb bin/sim
+
 clean:
 	rm obj/*.o bin/sim
 

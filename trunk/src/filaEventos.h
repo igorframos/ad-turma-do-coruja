@@ -28,6 +28,7 @@ class filaEventos
     std::list<pessoa> seeds;
     int pPeer, pBloco;
     unsigned int maxBlocos;
+    unsigned int saidas, chegadas;
     std::vector<unsigned int> possuem;
 
     void agendaChegadaPeer(double t);
@@ -45,13 +46,20 @@ class filaEventos
 
     public:
         filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco);
+        // pRec = probabilidade de recomendarem
+        // pPeer = seleção de peer
+        // pBloco = seleção de bloco
 
         bool haEvento();
         void trataProximoEvento();
         unsigned int pessoasNoSistema();
+        unsigned int chegadasTotais();
+        unsigned int saidasTotais();
 
         enum politicas{RANDOM_PEER, RANDOM_PIECE, RAREST_FIRST};
 };
+
+std::string binario(unsigned int x);
 
 #endif
 

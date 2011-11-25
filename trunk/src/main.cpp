@@ -7,14 +7,16 @@ int main(int argc, char *argv[])
     pessoa::nextId = 0;
     pessoa::arqCompleto = 0x3;
 
-    filaEventos f(1/0.5, 1/0.1, 1/0.1, 1/1, 0.5, filaEventos::RANDOM_PEER, filaEventos::RANDOM_PIECE);
+    filaEventos f(1/0.5, 1/0.1, 1/0.1, 1/1, 0, filaEventos::RANDOM_PEER, filaEventos::RANDOM_PIECE);
 
     int ini = time(NULL);
     while (f.haEvento())
     {
         f.trataProximoEvento();
         printf ("--------------------------> Pessoas no sistema: %u\n", f.pessoasNoSistema());
-        if (time(NULL) - ini > 600) break;
+        printf ("%u chegadas e %u saídas até o momento.\n", f.chegadasTotais(), f.saidasTotais());
+
+        if (time(NULL) - ini > 300) break;
     }
 
     /*
