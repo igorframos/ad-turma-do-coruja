@@ -7,6 +7,8 @@ filaEventos::filaEventos(double lambda, double mu, double gamma, double U, doubl
     agendaTransmissao(tAtual, publisher);
 
     maxBlocos = __builtin_popcount(pessoa::arqCompleto);
+    saidas = 0;
+    chegadas = 0;
 
     for (unsigned int i = 0; i < maxBlocos; ++i)
     {
@@ -57,7 +59,7 @@ void filaEventos::insereEvento(evento* e)
 
 void filaEventos::trataProximoEvento()
 {
-    system("Próximo evento");
+    system("Próximo_evento");
 
     std::list<evento*>::iterator it = fila.begin();
     evento *e = *it;
@@ -67,10 +69,12 @@ void filaEventos::trataProximoEvento()
 
     if (e->tipo() == evento::CHEGADA_PEER)
     {
+        ++chegadas;
         trataChegadaPeer(*dynamic_cast<eventoChegadaPeer*>(e));
     }
     else if (e->tipo() == evento::SAIDA_PEER)
     {
+        ++saidas;
         trataSaidaSeed(*dynamic_cast<eventoSaidaSeed*>(e));
     }
     else if (e->tipo() == evento::TRANSMISSAO)
@@ -80,6 +84,20 @@ void filaEventos::trataProximoEvento()
     else
     {
         printf ("Evento de tipo não conhecido.\n");
+    }
+
+    for (int i = 0; i < (int) maxBlocos; ++i)
+    {
+        printf ("possuem %d: %u\t", i, possuem[i]);
+    }
+    printf ("\n");
+    for (std::list<pessoa>::iterator i = peers.begin(); i != peers.end(); ++i)
+    {
+        printf ("Peer %u: %s\n", i->id(), binario(i->blocos()).c_str());
+    }
+    for (std::list<pessoa>::iterator i = seeds.begin(); i != seeds.end(); ++i)
+    {
+        printf ("Seed %u: %s\n", i->id(), binario(i->blocos()).c_str());
     }
 }
 
@@ -114,6 +132,15 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
         }
     }
 
+    for (std::list<pessoa>::iterator i = seeds.begin(); i != seeds.end(); ++i)
+    {
+        if (i->id() == seed.id())
+        {
+            seeds.erase(i);
+            break;
+        }
+    }
+
     for (unsigned int i = 0; i < maxBlocos; ++i)
     {
         --possuem[i];
@@ -138,10 +165,13 @@ void filaEventos::trataTransmissao(const eventoTransmissao& e)
 
     agendaTransmissao(tAtual, *ptr);
 
+    printf ("%d %s\n", peers.size(), origem.strTipo().c_str());
+
     if (peers.size() == 0 || (peers.size() == 1 && origem.tipo() == pessoa::PEER))
     {
         printf ("%.10f: Tentativa de transmissão partindo do %s de id %d (%x), mas não há peers no sistema.\n",
                 tAtual, origem.strTipo().c_str(), origem.id(), origem.blocos());
+        return;
     }
 
     std::list<pessoa>::iterator it = escolhePeer(origem);
@@ -182,6 +212,11 @@ std::list<pessoa>::iterator filaEventos::escolhePeer(const pessoa& origem)
         sub = 1;
     }
 
+    if (peers.size() - sub == 0)
+    {
+        return peers.begin();
+    }
+
     if (pPeer == RANDOM_PEER)
     {
         p = g.randUniforme() % (peers.size() - sub);
@@ -214,7 +249,7 @@ unsigned int filaEventos::escolheBloco(const pessoa& origem, const pessoa& desti
     {
         unsigned int bloco = g.randUniforme() % numBlocosPossiveis;
 
-        blocoEscolhido = 0;
+        blocoEscolhido = g.randUniforme() % maxBlocos;
         while (bloco)
         {
             if (blocosPossiveis & (1 << blocoEscolhido))
@@ -223,6 +258,7 @@ unsigned int filaEventos::escolheBloco(const pessoa& origem, const pessoa& desti
             }
 
             ++blocoEscolhido;
+            blocoEscolhido %= maxBlocos;
         }
     }
     else
@@ -246,5 +282,28 @@ unsigned int filaEventos::escolheBloco(const pessoa& origem, const pessoa& desti
 unsigned int filaEventos::pessoasNoSistema()
 {
     return peers.size() + seeds.size() + 1;
+}
+
+unsigned int filaEventos::chegadasTotais()
+{
+    return chegadas;
+}
+
+unsigned int filaEventos::saidasTotais()
+{
+    return saidas;
+}
+
+std::string binario(unsigned int x)
+{
+    std::string ansr;
+
+    while (x / 2)
+    {
+        ansr.push_back((char) x % 2 + '0');
+        x /= 2;
+    }
+
+    return std::string(ansr.rbegin(), ansr.rend());
 }
 
