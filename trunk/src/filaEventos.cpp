@@ -298,7 +298,7 @@ std::string binario(unsigned int x)
 {
     std::string ansr;
 
-    while (x / 2)
+    while (x)
     {
         ansr.push_back((char) (x % 2) + '0');
         x /= 2;
