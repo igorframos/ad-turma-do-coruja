@@ -4,7 +4,6 @@ DEBUG = -g
 CFLAGS = -Wall -O3 -funroll-loops -c
 LFLAGS = -Wall -lm
 
-
 bin/sim: $(OBJS)
 	$(CC) -o bin/sim $(OBJS) $(LFLAGS) $(DEBUG)
 
