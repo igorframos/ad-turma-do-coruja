@@ -93,11 +93,11 @@ void filaEventos::trataProximoEvento()
     printf ("\n");
     for (std::list<pessoa>::iterator i = peers.begin(); i != peers.end(); ++i)
     {
-        printf ("Peer %u: %s\n", i->id(), binario(i->blocos()).c_str());
+        printf ("Peer %u: %s\n", i->id(), binario(i->blocos(), maxBlocos).c_str());
     }
     for (std::list<pessoa>::iterator i = seeds.begin(); i != seeds.end(); ++i)
     {
-        printf ("Seed %u: %s\n", i->id(), binario(i->blocos()).c_str());
+        printf ("Seed %u: %s\n", i->id(), binario(i->blocos(), maxBlocos).c_str());
     }
 }
 
@@ -239,6 +239,7 @@ unsigned int filaEventos::escolheBloco(const pessoa& origem, const pessoa& desti
     unsigned int blocoEscolhido = 0;
     unsigned int blocosPossiveis = origem.blocosPossiveis(destino);
     unsigned int numBlocosPossiveis = __builtin_popcount(blocosPossiveis);
+    printf ("Posso transmitir algum em %s.\n", binario(blocosPossiveis, maxBlocos).c_str());
 
     if (numBlocosPossiveis == 0)
     {
@@ -247,16 +248,9 @@ unsigned int filaEventos::escolheBloco(const pessoa& origem, const pessoa& desti
 
     if (pBloco == RANDOM_PIECE)
     {
-        unsigned int bloco = g.randUniforme() % numBlocosPossiveis;
-
         blocoEscolhido = g.randUniforme() % maxBlocos;
-        while (bloco)
+        while (!(blocosPossiveis & (1 << blocoEscolhido)))
         {
-            if (blocosPossiveis & (1 << blocoEscolhido))
-            {
-                --bloco;
-            }
-
             ++blocoEscolhido;
             blocoEscolhido %= maxBlocos;
         }
@@ -284,6 +278,11 @@ unsigned int filaEventos::pessoasNoSistema()
     return peers.size() + seeds.size() + 1;
 }
 
+unsigned int filaEventos::peersNoSistema()
+{
+    return peers.size();
+}
+
 unsigned int filaEventos::chegadasTotais()
 {
     return chegadas;
@@ -294,11 +293,11 @@ unsigned int filaEventos::saidasTotais()
     return saidas;
 }
 
-std::string binario(unsigned int x)
+std::string binario(unsigned int x, unsigned int alg)
 {
     std::string ansr;
 
-    while (x)
+    while (alg--)
     {
         ansr.push_back((char) (x % 2) + '0');
         x /= 2;
