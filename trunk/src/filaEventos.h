@@ -80,8 +80,8 @@ class filaEventos
         double mediaDownload();
 
         const static unsigned int TRANSIENTE = 0;
-        const static unsigned int DELTA = 100;
-        const static unsigned int TAMRODADA = 2500;
+        const static unsigned int DELTA = 200;
+        const static unsigned int TAMRODADA = 5000;
         const static double EPS = 1.5;
         enum politicas{RANDOM_PEER, RANDOM_PIECE, RAREST_FIRST};
 };
