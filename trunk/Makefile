@@ -42,7 +42,7 @@ obj/geradorAleatorio.o: src/geradorAleatorio.cpp src/geradorAleatorio.h
 	cd obj && $(CC) $(CFLAGS) $(DEBUG) ../src/geradorAleatorio.cpp && cd ..
 
 run: bin/sim
-	./bin/sim >./bin/sim.out
+	./bin/sim cenarios.txt >./bin/sim.out
 
 debug: bin/sim
 	gdb bin/sim

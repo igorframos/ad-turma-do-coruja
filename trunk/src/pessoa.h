@@ -8,14 +8,19 @@ class pessoa
     int tp;
     unsigned int k;
     unsigned int b;
+    unsigned int c;
+
+    double a;
 
     public:
-        pessoa(int tp);
+        pessoa(const int tp, const unsigned int c, const double a);
 
         int tipo() const;
+        double chegada() const;
         unsigned int id() const;
         unsigned int blocos() const;
         unsigned int& blocos();
+        unsigned int cor() const;
 
         unsigned int blocosFaltantes() const;
         unsigned int blocosPossiveis(const pessoa& p) const;
