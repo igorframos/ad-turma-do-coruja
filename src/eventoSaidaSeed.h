@@ -3,6 +3,7 @@
 
 #include "evento.h"
 #include "pessoa.h"
+#include <list>
 
 class eventoSaidaSeed : public evento
 {

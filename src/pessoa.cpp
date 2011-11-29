@@ -3,7 +3,7 @@
 unsigned int pessoa::nextId;
 unsigned int pessoa::arqCompleto;
 
-pessoa::pessoa(int tp) : tp(tp), k(nextId++)
+pessoa::pessoa(const int tp, const unsigned int c, const double a) : tp(tp), k(nextId++), c(c), a(a)
 {
     if (tp == PUBLISHER || tp == SEED)
     {
@@ -33,6 +33,16 @@ unsigned int pessoa::blocos() const
 unsigned int& pessoa::blocos()
 {
     return b;
+}
+
+unsigned int pessoa::cor() const
+{
+    return c;
+}
+
+double pessoa::chegada() const
+{
+    return a;
 }
 
 unsigned int pessoa::blocosPossiveis(const pessoa& p) const
