@@ -330,13 +330,14 @@ unsigned int filaEventos::escolheBloco(const pessoa& origem, const pessoa& desti
     {
         unsigned int minBlocos = 0x3f3f3f3f; // Valor "infinito"
 
-        for (blocoEscolhido = 0; pessoa::arqCompleto & (1 << blocoEscolhido); ++blocoEscolhido)
+        for (int bloco = 0; pessoa::arqCompleto & (1 << bloco); ++bloco)
         {
-            if (!(blocosPossiveis & (1 << blocoEscolhido))) continue;
+            if (!(blocosPossiveis & (1 << bloco))) continue;
 
-            if (possuem[blocoEscolhido] < minBlocos)
+            if (possuem[bloco] < minBlocos)
             {
-                minBlocos = possuem[blocoEscolhido];
+                minBlocos = possuem[bloco];
+                blocoEscolhido = bloco;
             }
         }
     }
