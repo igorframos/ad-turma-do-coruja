@@ -2,6 +2,7 @@
 
 int main(int argc, char *argv[])
 {
+    // Abre arquivo de cenários que vem no argv. Se rodar com o makefile é automático.
     FILE* cenarios = fopen(argv[1], "r");
     if (!cenarios)
     {
@@ -10,25 +11,26 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Arquivo para onde vão os resultados no final da simulação.
     FILE* resultados = fopen("resultados.txt", "w");
 
     while (1)
     {
-        unsigned int cenario;
-        unsigned int arquivo;
-        double lambda;
-        double mu;
-        double U;
-        double gamma;
-        double pRec;
-        unsigned int populacaoInicial;
-        char politicaPeer;
-        int pPeer;
-        char politicaBloco;
-        int pBloco;
-        unsigned int arqInicial;
+        unsigned int cenario;           // O cenário da simulação.
+        unsigned int arquivo;           // O arquivo completo.
+        double lambda;                  // A taxa de chegada de peers.
+        double mu;                      // A taxa de upload de peers e seeds.
+        double U;                       // A taxa de upload do publisher.
+        double gamma;                   // 1 / gamma é o tempo médio de permanência de um seed.
+        double pRec;                    // Probabilidade de haver recomendação.
+        unsigned int populacaoInicial;  // Número de peers inicialmente no sistema.
+        char politicaPeer;              // Política de escolha de peer.
+        int pPeer;                      // Código interno da política de escolha de peer.
+        char politicaBloco;             // Política de escolha de bloco.
+        int pBloco;                     // Código interno da política de escolha de bloco.
+        unsigned int arqInicial;        // Arquivo que os peers presentes no sistem têm.
 
-        int ba; // Variável só para tirar o warning de valor de retorno ignorado
+        int ba; // Variável só para tirar o warning de valor de retorno ignorado.
 
         ba = fscanf (cenarios, "%u", &cenario); ++ba;
         if (!cenario) break;
@@ -41,14 +43,21 @@ int main(int argc, char *argv[])
         if (politicaBloco == 'r') pBloco = filaEventos::RANDOM_PIECE;
         else pBloco = filaEventos::RAREST_FIRST;
 
+        // Inicializações de variáveis de classe do tipo pessoa.
         evento::nextId = 0;
         pessoa::nextId = 0;
         pessoa::arqCompleto = arquivo;
         
         printf ("Começarei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %.1f e população inicial de %d\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial);
 
+        // Chama o construtor do simulador de um cenário.
         filaEventos f(1/lambda, 1/mu, 1/gamma, 1/U, pRec, pPeer, pBloco, populacaoInicial, arqInicial);
 
+        // Essas são as variáveis usadas nos cálculos de intervalos de confiança.
+        // var tem a soma das rodadas, var2 a soma dos quadrados das rodadas,
+        // L é o limite inferior do intervalo de confiança,
+        // U é o limite superior do intervalo de confiança,
+        // p é o tamanho do intervalo de confiança como porcentagem do estimador da média.
         double tempoDownload = 0, tempoDownload2 = 0, Ld, Ud, pd;
         double vazao = 0, vazao2 = 0, Lv, Uv, pv;
         double pessoas = 0, pessoas2 = 0, Ln, Un, pn;
@@ -56,7 +65,7 @@ int main(int argc, char *argv[])
         double tempo = 0, tempo2 = 0, Lt, Ut, pt;
         std::vector<double> tempoPorN, tempoPorN2, LpN, UpN, ppN;
         std::vector<std::vector<double> > temposDownload;
-        int n = 0;
+        int n = 0;  // Número de rodadas.
 
         while (f.haEvento())
         {
@@ -65,11 +74,15 @@ int main(int argc, char *argv[])
             if (!f.fimRodada()) continue;
 
             ++n;
+
+            // Recupera os dados da simulação de uma rodada.
             double mediaDownload = f.mediaDownload();
             double mediaVazao = f.mediaVazao();
             double mediaN = f.mediaPessoas();
             double mediaPeers = f.mediaPeers();
             double mediaT = f.mediaPermanencia();
+
+            // Só é preciso fazer a CDF de T no cenário 2, então só pegamos esses dados neste cenário.
             if (cenario == 2) temposDownload.push_back(f.temposDeDownload());
 
             tempoDownload += mediaDownload;
@@ -83,6 +96,7 @@ int main(int argc, char *argv[])
             tempo += mediaT;
             tempo2 += mediaT * mediaT;
 
+            // Só é preciso fazer a pmf de N no cenário 1, então só pegamos esses dados nesse cenário.
             if (cenario == 1)
             {
                 std::vector<double> tempoN = f.tempoPorN();
@@ -101,8 +115,11 @@ int main(int argc, char *argv[])
                 }
             }
 
+            // Com menos de duas rodads nem podemos calcular o intervalo de confiança.
             if (n < 2) continue;
 
+            // Os resultados só valem com 30 rodadas ou mais, que é quando a distribuição t-Student
+            // se aproxima o suficiente da distribuição normal.
             bool encerra = (n >= 30);
 
             if (cenario == 1)
@@ -119,11 +136,7 @@ int main(int argc, char *argv[])
                     UpN[i] = mu + 1.96 * sigma / sqrt(n);
                     ppN[i] = 100 * 1.96 * sigma / (mu * sqrt(n));
 
-                    printf ("%d: %.12f (%.12f, %.12f) %.12f\n", i, mu, LpN[i], UpN[i], ppN[i]);
-                    if (ppN[i] > 10) 
-                    {
-                        encerra = false;
-                    }
+                    printf ("\t%d: %.12f (%.12f, %.12f) %.12f\n", i, mu, LpN[i], UpN[i], ppN[i]);
                 }
             }
 
@@ -179,12 +192,14 @@ int main(int argc, char *argv[])
 
         printf ("Encerrei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %.1f e população inicial de %d\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial);
 
+        // Daqui em diante é só impressão dos resultados no arquivo de saída.
         double mud = tempoDownload / n;
         double muv = vazao / n;
         double mun = pessoas / n;
         double mup = peers / n;
         double mut = tempo / n;
         fprintf (resultados, "Cenário: %d - Arquivo: %x - lambda: %.1f - População Inicial: %d - Rodadas: %d\n", cenario, arquivo, lambda, populacaoInicial, n);
+        fprintf (resultados, "Duração da Fase transiente: %.12f\n", f.fimFaseTransiente());
         fprintf (resultados, "Média (Tempo de Download): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mud, Ld, Ud, pd);
         fprintf (resultados, "Média (Tempo de Permanência): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mut, Lt, Ut, pt);
         fprintf (resultados, "Média (Vazão): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", muv, Lv, Uv, pv);
@@ -194,7 +209,12 @@ int main(int argc, char *argv[])
         if (cenario == 1)
         {
             fprintf (resultados, "pmf do Número total de usuários no sistema:\n");
-            for (int i = 0; i < (int) tempoPorN.size(); ++i) fprintf (resultados, "\t%u: %.12f - IC: (%.12f, %.12f)\n", i, tempoPorN[i] / n, LpN[i], UpN[i]);
+            for (int i = 0; i < (int) tempoPorN.size(); ++i) fprintf (resultados, "\t%u: %.12f - IC: (%.12f, %.12f) %.12f\n", i, tempoPorN[i] / n, LpN[i], UpN[i], ppN[i]);
+            tempoPorN.clear();
+            tempoPorN2.clear();
+            LpN.clear();
+            UpN.clear();
+            ppN.clear();
         }
 
         if (cenario == 2)
@@ -203,90 +223,15 @@ int main(int argc, char *argv[])
             for (int i = 0; i < n; ++i)
             {
                 sort(temposDownload[i].begin(), temposDownload[i].end());
-                fprintf (resultados, "\tRodada %d:", i);
+                fprintf (resultados, "\tRodada %d:", i+1);
                 for (int j = 0; j < (int) temposDownload[i].size(); ++j) fprintf (resultados, " %.12f", temposDownload[i][j]);
+                fprintf (resultados, "\n");
             }
-            fprintf (resultados, "\n");
             temposDownload.clear();
         }
         fprintf (resultados, "\n");
     }
 
     return 0;
-
-    /*
-    geradorAleatorio g(seed);
-
-    unsigned int r;
-    long long k = seed;
-    long long mul = 1000003;
-
-    for (int i = 0; i <= (1 << 22); ++i)
-    {
-        k = (k * mul) % (g.RANDMAX + 1);
-        r = g.randUniforme();
-
-        if (k != r)
-            printf ("%lld %u\n", k, r);
-    }
-
-    double lambda = 0.5;
-
-    double y = 0;
-    for (int i = 0; i < 5; ++i)
-    {
-        double x = 0;
-        for (int i = 0; i < (1 << 22); ++i)
-        {
-            x += g.randExponencial(lambda);
-        }
-
-        y += x / (1 << 22);
-
-        printf ("%f\n", x / (1<<22));
-    }
-
-    printf (">> %f\n", y / 30);
-
-    pessoa pub(pessoa::PUBLISHER);
-
-    std::set<evento*> s;
-
-    s.insert(new eventoTransmissao(g.randExponencial(lambda), &pub));
-    for (int i = 0; i < 20; ++i)
-    {
-        unsigned int p = g.randUniforme() % 3;
-        if (p == 0)
-            s.insert(new eventoChegadaPeer(g.randExponencial(lambda)));
-        else if (p == 1)
-            s.insert(new eventoTransmissao(g.randExponencial(lambda), new pessoa(pessoa::PEER)));
-        else
-            s.insert(new eventoSaidaSeed(g.randExponencial(lambda), new pessoa(pessoa::SEED)));
-    }
-
-    for (std::set<evento*>::iterator it = s.begin(); it != s.end(); ++it)
-    {
-        evento *i = *it;
-        printf ("%f %d %s --> %u -->\t", i->tempo(), i->tipo(), i->strTipo().c_str(), i->id());
-        if (i->tipo() == evento::CHEGADA_PEER)
-        {
-            eventoChegadaPeer a = dynamic_cast<eventoChegadaPeer&>(*i);
-            printf ("Chegou peer novo na parada! \\o/\n");
-        }
-        else if (i->tipo() == evento::TRANSMISSAO)
-        {
-            eventoTransmissao a = dynamic_cast<eventoTransmissao&>(*i);
-            pessoa p = a.origem();
-
-            printf ("Origem: %u, %s. Arquivo: %x. Faltam %u blocos.\n", p.id(), p.strTipo().c_str(), p.blocos(), p.blocosFaltantes());
-        }
-        else if (i->tipo() == evento::SAIDA_PEER)
-        {
-            eventoSaidaSeed a = dynamic_cast<eventoSaidaSeed&>(*i);
-            printf ("Cara %d vai embora. =(\n", a.seed().id());
-        }
-    }
-
-    return 0;*/
 }
 
