@@ -1,6 +1,7 @@
 #ifndef __FILA_EVENTOS__
 #define __FILA_EVENTOS__
 
+#include <set>
 #include <list>
 #include <vector>
 #include <cstdio>
@@ -23,12 +24,14 @@ class filaEventos
     double pRec;
     double tAtual;
     geradorAleatorio g;
-    std::list<evento*> fila;
+    std::set<std::pair<double,evento*> > fila;
     pessoa publisher;
     std::list<pessoa> peers;
     std::list<pessoa> seeds;
+    std::set<int> setPeers;
+    std::set<int> setSeeds;
     int pPeer, pBloco;
-    double T, T0, T1, D, D0, D1, A, A0, A1, V, V0, V1;
+    double T, T0, T1, D, D0, D1, A, A0, A1, V, V0, V1, P, P0, P1;
     double t, tTotal, tRodada;
     unsigned int f;
     unsigned int maxBlocos;
@@ -57,11 +60,10 @@ class filaEventos
     unsigned int escolheBloco(const pessoa& origem, const pessoa& destino);
 
     public:
-        filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais);
+        filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais, unsigned int arqInicial);
         // pRec = probabilidade de recomendarem
         // pPeer = seleção de peer
         // pBloco = seleção de bloco
-        ~filaEventos();
 
         bool haEvento();
         void trataProximoEvento();
@@ -76,13 +78,15 @@ class filaEventos
         std::vector<double> temposDeDownload();
         bool fimRodada();
         double mediaVazao();
+        double mediaPeers();
         double mediaPessoas();
         double mediaDownload();
+        double mediaPermanencia();
 
         const static unsigned int TRANSIENTE = 0;
-        const static unsigned int DELTA = 200;
+        const static unsigned int DELTA = 175;
         const static unsigned int TAMRODADA = 5000;
-        const static double EPS = 1.5;
+        const static double EPS = 1.0;
         enum politicas{RANDOM_PEER, RANDOM_PIECE, RAREST_FIRST};
 };
 

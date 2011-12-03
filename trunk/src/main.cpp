@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
         int pPeer;
         char politicaBloco;
         int pBloco;
+        unsigned int arqInicial;
 
         int ba; // Variável só para tirar o warning de valor de retorno ignorado
 
@@ -34,7 +35,7 @@ int main(int argc, char *argv[])
 
         ba = fscanf (cenarios, "%x %lf %lf", &arquivo, &lambda, &mu); ++ba;
         ba = fscanf (cenarios, "%lf %lf %lf %d", &U, &gamma, &pRec, &populacaoInicial); ++ba;
-        ba = fscanf (cenarios, " %c %c", &politicaPeer, &politicaBloco); ++ba;
+        ba = fscanf (cenarios, " %c %c %u", &politicaPeer, &politicaBloco, &arqInicial); ++ba;
 
         if (politicaPeer == 'r') pPeer = filaEventos::RANDOM_PEER;
         if (politicaBloco == 'r') pBloco = filaEventos::RANDOM_PIECE;
@@ -44,31 +45,32 @@ int main(int argc, char *argv[])
         pessoa::nextId = 0;
         pessoa::arqCompleto = arquivo;
         
-        printf ("Começarei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %e e população inicial de %d\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial);
+        printf ("Começarei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %.1f e população inicial de %d\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial);
 
-        filaEventos f(1/lambda, 1/mu, 1/gamma, 1/U, pRec, pPeer, pBloco, populacaoInicial);
+        filaEventos f(1/lambda, 1/mu, 1/gamma, 1/U, pRec, pPeer, pBloco, populacaoInicial, arqInicial);
 
         double tempoDownload = 0, tempoDownload2 = 0, Ld, Ud, pd;
         double vazao = 0, vazao2 = 0, Lv, Uv, pv;
         double pessoas = 0, pessoas2 = 0, Ln, Un, pn;
-        std::vector<double> tempoPorN(100);
+        double peers = 0, peers2 = 0, Lp, Up, pp;
+        double tempo = 0, tempo2 = 0, Lt, Ut, pt;
+        std::vector<double> tempoPorN, tempoPorN2, LpN, UpN, ppN;
         std::vector<std::vector<double> > temposDownload;
         int n = 0;
 
         while (f.haEvento())
         {
             f.trataProximoEvento();
-            printf ("------------------------> Pessoas no sistema: %u Peers no sistema: %u\n", f.pessoasNoSistema(), f.peersNoSistema());
-            printf ("%u chegadas e %u saídas até o momento.\n", f.chegadasTotais(), f.saidasTotais());
 
             if (!f.fimRodada()) continue;
 
             ++n;
-            std::vector<double> tempoN = f.tempoPorN();
             double mediaDownload = f.mediaDownload();
             double mediaVazao = f.mediaVazao();
             double mediaN = f.mediaPessoas();
-            temposDownload.push_back(f.temposDeDownload());
+            double mediaPeers = f.mediaPeers();
+            double mediaT = f.mediaPermanencia();
+            if (cenario == 2) temposDownload.push_back(f.temposDeDownload());
 
             tempoDownload += mediaDownload;
             tempoDownload2 += mediaDownload * mediaDownload;
@@ -76,22 +78,54 @@ int main(int argc, char *argv[])
             vazao2 += mediaVazao * mediaVazao;
             pessoas += mediaN;
             pessoas2 += mediaN * mediaN;
+            peers += mediaPeers;
+            peers2 += mediaPeers * mediaPeers;
+            tempo += mediaT;
+            tempo2 += mediaT * mediaT;
 
-            for (int i = 0; i < (int) tempoN.size(); ++i)
+            if (cenario == 1)
             {
-                if ((int) tempoPorN.size() <= i)
+                std::vector<double> tempoN = f.tempoPorN();
+                for (int i = 0; i < (int) tempoN.size(); ++i)
                 {
-                    tempoPorN.push_back(tempoN[i]);
-                }
-                else
-                {
-                    tempoPorN[i] += tempoN[i];
+                    if ((int) tempoPorN.size() <= i)
+                    {
+                        tempoPorN.push_back(tempoN[i]);
+                        tempoPorN2.push_back(tempoN[i] * tempoN[i]);
+                    }
+                    else
+                    {
+                        tempoPorN[i] += tempoN[i];
+                        tempoPorN2[i] += tempoN[i] * tempoN[i];
+                    }
                 }
             }
 
             if (n < 2) continue;
 
-            bool encerra = true;
+            bool encerra = (n >= 30);
+
+            if (cenario == 1)
+            {
+                for (int i = 0; i < (int) tempoPorN.size(); ++i)
+                {
+                    while (LpN.size() < tempoPorN.size()) LpN.push_back(0);
+                    while (UpN.size() < tempoPorN.size()) UpN.push_back(0);
+                    while (ppN.size() < tempoPorN.size()) ppN.push_back(0);
+
+                    double mu = tempoPorN[i] / n;
+                    double sigma = sqrt((tempoPorN2[i] - 2 * mu * tempoPorN[i] + n * mu * mu) / (n - 1));
+                    LpN[i] = mu - 1.96 * sigma / sqrt(n);
+                    UpN[i] = mu + 1.96 * sigma / sqrt(n);
+                    ppN[i] = 100 * 1.96 * sigma / (mu * sqrt(n));
+
+                    printf ("%d: %.12f (%.12f, %.12f) %.12f\n", i, mu, LpN[i], UpN[i], ppN[i]);
+                    if (ppN[i] > 10) 
+                    {
+                        encerra = false;
+                    }
+                }
+            }
 
             double mu = tempoDownload / n;
             double sigma = sqrt((tempoDownload2 - 2 * mu * tempoDownload + n * mu * mu) / (n - 1));
@@ -117,38 +151,65 @@ int main(int argc, char *argv[])
 
             if (pn > 10) encerra = false;
 
-            if (encerra == true) break;
+            mu = peers / n;
+            sigma = sqrt((peers2 - 2 * mu * peers + n * mu * mu) / (n - 1));
+            Lp = mu - 1.96 * sigma / sqrt(n);
+            Up = mu + 1.96 * sigma / sqrt(n);
+            pp = 100 * 1.96 * sigma / (mu * sqrt(n));
+
+            if (pp > 10) encerra = false;
+
+            mu = tempo / n;
+            sigma = sqrt((tempo2 - 2 * mu * tempo + n * mu * mu) / (n - 1));
+            Lt = mu - 1.96 * sigma / sqrt(n);
+            Ut = mu + 1.96 * sigma / sqrt(n);
+            pt = 100 * 1.96 * sigma / (mu * sqrt(n));
+
+            if (pt > 10) encerra = false;
 
             printf ("Rodada %d\n", n);
-            printf ("\tDownload: %.15f (%.15f, %.15f) %.15f\n", tempoDownload / n, Ld, Ud, pd);
-            printf ("\tVazão:    %.15f (%.15f, %.15f) %.15f\n", vazao / n, Lv, Uv, pv);
-            printf ("\tPessoas:  %.15f (%.15f, %.15f) %.15f\n", pessoas / n, Ln, Un, pn);
+            printf ("\tDownload:    %.12f (%.12f, %.12f) %.12f\n", tempoDownload / n, Ld, Ud, pd);
+            printf ("\tPermanencia: %.12f (%.12f, %.12f) %.12f\n", tempo / n, Lt, Ut, pt);
+            printf ("\tVazão:       %.12f (%.12f, %.12f) %.12f\n", vazao / n, Lv, Uv, pv);
+            printf ("\tPessoas:     %.12f (%.12f, %.12f) %.12f\n", pessoas / n, Ln, Un, pn);
+            printf ("\tPeers:       %.12f (%.12f, %.12f) %.12f\n", peers / n, Lp, Up, pp);
+
+            if (encerra == true) break;
         }
 
-        printf ("Encerrei o cenário %d com arquivo %x, lambda %.1f e população inicial de %d\n", cenario, arquivo, lambda, populacaoInicial);
+        printf ("Encerrei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %.1f e população inicial de %d\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial);
 
         double mud = tempoDownload / n;
         double muv = vazao / n;
         double mun = pessoas / n;
+        double mup = peers / n;
+        double mut = tempo / n;
         fprintf (resultados, "Cenário: %d - Arquivo: %x - lambda: %.1f - População Inicial: %d - Rodadas: %d\n", cenario, arquivo, lambda, populacaoInicial, n);
-        fprintf (resultados, "Média (Tempo de Download): %.15f - IC: (%.15f, %.15f) - P: %.15f\n", mud, Ld, Ud, pd);
-        fprintf (resultados, "Média (Vazão): %.15f - IC: (%.15f, %.15f) - P: %.15f\n", muv, Lv, Uv, pv);
-        fprintf (resultados, "Média (Pessoas): %.15f - IC: (%.15f, %.15f)\n - P: %.15f", mun, Ln, Un, pn);
+        fprintf (resultados, "Média (Tempo de Download): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mud, Ld, Ud, pd);
+        fprintf (resultados, "Média (Tempo de Permanência): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mut, Lt, Ut, pt);
+        fprintf (resultados, "Média (Vazão): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", muv, Lv, Uv, pv);
+        fprintf (resultados, "Média (Pessoas): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mun, Ln, Un, pn);
+        fprintf (resultados, "Média (Peers): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mup, Lp, Up, pp);
 
-        double t = 0;
-        for  (int i = 0; i < (int) tempoPorN.size(); ++i) t += tempoPorN[i];
-
-        fprintf (resultados, "pmf do Número total de usuários no sistema:\n");
-        for (int i = 0; i < (int) tempoPorN.size(); ++i) fprintf (resultados, "\t%u: %.15f\n", i, tempoPorN[i] / t);
-
-        fprintf (resultados, "Tempos de download por rodada:\n");
-        for (int i = 0; i < n; ++i)
+        if (cenario == 1)
         {
-            sort(temposDownload[i].begin(), temposDownload[i].end());
-            fprintf (resultados, "\tRodada %d:", i);
-            for (int j = 0; j < (int) temposDownload[i].size(); ++j) fprintf (resultados, " %.15f", temposDownload[i][j]);
+            fprintf (resultados, "pmf do Número total de usuários no sistema:\n");
+            for (int i = 0; i < (int) tempoPorN.size(); ++i) fprintf (resultados, "\t%u: %.12f - IC: (%.12f, %.12f)\n", i, tempoPorN[i] / n, LpN[i], UpN[i]);
         }
-        printf ("\n\n");
+
+        if (cenario == 2)
+        {
+            fprintf (resultados, "Tempos de download por rodada:\n");
+            for (int i = 0; i < n; ++i)
+            {
+                sort(temposDownload[i].begin(), temposDownload[i].end());
+                fprintf (resultados, "\tRodada %d:", i);
+                for (int j = 0; j < (int) temposDownload[i].size(); ++j) fprintf (resultados, " %.12f", temposDownload[i][j]);
+            }
+            fprintf (resultados, "\n");
+            temposDownload.clear();
+        }
+        fprintf (resultados, "\n");
     }
 
     return 0;

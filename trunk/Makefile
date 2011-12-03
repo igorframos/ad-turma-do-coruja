@@ -1,7 +1,7 @@
 OBJS = obj/main.o obj/evento.o obj/eventoChegadaPeer.o obj/eventoSaidaSeed.o obj/eventoTransmissao.o obj/pessoa.o obj/filaEventos.o obj/geradorAleatorio.o
 CC = g++
 DEBUG = -g
-CFLAGS = -Wall -O3 -funroll-loops -c
+CFLAGS = -Wall -funroll-loops -c
 LFLAGS = -Wall -lm
 
 bin/sim: $(OBJS)
@@ -42,7 +42,7 @@ obj/geradorAleatorio.o: src/geradorAleatorio.cpp src/geradorAleatorio.h
 	cd obj && $(CC) $(CFLAGS) $(DEBUG) ../src/geradorAleatorio.cpp && cd ..
 
 run: bin/sim
-	./bin/sim cenarios.txt >./bin/sim.out
+	./bin/sim cenarios.txt
 
 debug: bin/sim
 	gdb bin/sim

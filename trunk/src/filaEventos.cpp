@@ -1,7 +1,7 @@
 #include "filaEventos.h"
 
-filaEventos::filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais) : 
-    lambda(lambda), mu(mu), gamma(gamma), U(U), pRec(pRec), tAtual(0), g(geradorAleatorio(2065)), publisher(pessoa(pessoa::PUBLISHER, -1, 0)), pPeer(pPeer), pBloco(pBloco), T(0), T0(0), T1(0), D(0), D0(0), D1(0), A(0), A0(0), A1(0), V(0), V0(0), V1(0), t(0), tTotal(0), tRodada(0), f(TRANSIENTE), fimDeRodada(false)
+filaEventos::filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais, unsigned int arqInicial) : 
+    lambda(lambda), mu(mu), gamma(gamma), U(U), pRec(pRec), tAtual(0), g(geradorAleatorio(2065)), publisher(pessoa(pessoa::PUBLISHER, -1, 0)), pPeer(pPeer), pBloco(pBloco), T(0), T0(0), T1(0), D(0), D0(0), D1(0), A(0), A0(0), A1(0), V(0), V0(0), V1(0), P(0), P0(0), P1(0), t(0), tTotal(0), tRodada(0), f(TRANSIENTE), fimDeRodada(false)
 {
     if (peersIniciais == 0)
         agendaChegadaPeer(tAtual);
@@ -23,13 +23,10 @@ filaEventos::filaEventos(double lambda, double mu, double gamma, double U, doubl
     for (int i = 0; i < peersIniciais; ++i)
     {
         peers.push_back(pessoa(pessoa::PEER, 0, 0));
+        setPeers.insert(peers.back().id());
+        peers.back().blocos() = arqInicial;
         agendaTransmissao(tAtual, peers.back());
-        printf ("%d\n", peersIniciais);
     }
-}
-
-filaEventos::~filaEventos()
-{
 }
 
 bool filaEventos::haEvento()
@@ -65,26 +62,22 @@ void filaEventos::agendaTransmissao(double t, const pessoa& p)
 
 void filaEventos::insereEvento(evento* e)
 {
-    std::list<evento*>::iterator it = fila.begin();
-
-    while (it != fila.end() && **it < *e) ++it;
-
-    fila.insert(it, e);
+    fila.insert(std::make_pair(e->tempo(), e));
 }
 
 void filaEventos::trataProximoEvento()
 {
-    // Isso aqui é uma gambiarra para que apareça algo na tela
-    // do terminal mesmo quando eu redirecionar a saída para um
-    // arquivo como está no Makefile.
-    int ba = system("Próximo_evento");
-    ++ba;
-
-    std::list<evento*>::iterator it = fila.begin();
-    evento *e = *it;
-    fila.erase(it);
+    evento *e = fila.begin()->second;
+    fila.erase(fila.begin());
 
     tAtual = e->tempo();
+
+    A += (tAtual - t) * pessoasNoSistema(); 
+    P += (tAtual - t) * peersNoSistema();
+    if (tempoN.size() <= pessoasNoSistema()) tempoN.push_back(tAtual - t);
+    else tempoN[pessoasNoSistema()] += tAtual - t;
+    tTotal += tAtual - t;
+    t = tAtual;
 
     if (e->tipo() == evento::CHEGADA_PEER)
     {
@@ -104,77 +97,25 @@ void filaEventos::trataProximoEvento()
     {
         printf ("Evento de tipo não conhecido.\n");
     }
-    
 
-    for (int i = 0; i < (int) maxBlocos; ++i)
-    {
-        printf ("possuem %d: %u\t", i, possuem[i]);
-    }
-    printf ("\n");
-    for (std::list<pessoa>::iterator i = peers.begin(); i != peers.end(); ++i)
-    {
-        printf ("Peer %u: %s\n", i->id(), binario(i->blocos(), maxBlocos).c_str());
-    }
-    for (std::list<pessoa>::iterator i = seeds.begin(); i != seeds.end(); ++i)
-    {
-        printf ("Seed %u: %s\n", i->id(), binario(i->blocos(), maxBlocos).c_str());
-    }
+    delete e;
 }
 
 void filaEventos::trataChegadaPeer(const eventoChegadaPeer& e)
 {
-    // Isso aqui é uma gambiarra para que apareça algo na tela
-    // do terminal mesmo quando eu redirecionar a saída para um
-    // arquivo como está no Makefile.
-    int ba = system("Chegada de peer");
-    ++ba;
-
-    A += (tAtual - t) * pessoasNoSistema(); 
-    if (tempoN.size() <= pessoasNoSistema()) tempoN.push_back(tAtual - t);
-    else tempoN[pessoasNoSistema()] += tAtual - t;
-    tTotal += tAtual - t;
-    t = tAtual;
-    
     peers.push_back(pessoa(pessoa::PEER, f, tAtual));
     agendaChegadaPeer(tAtual);
     agendaTransmissao(tAtual, peers.back());
-
-    printf ("%.10f: Chegada de peer.\n", tAtual);
+    setPeers.insert(peers.back().id());
 
     testaFimRodada();
 }
 
 void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
 {
-    // Isso aqui é uma gambiarra para que apareça algo na tela
-    // do terminal mesmo quando eu redirecionar a saída para um
-    // arquivo como está no Makefile.
-    int ba = system("Saída de seed");
-    ++ba;
-
     ++V;
 
-    A += (tAtual - t) * pessoasNoSistema(); 
-    if (tempoN.size() <= pessoasNoSistema()) tempoN.push_back(tAtual - t);
-    else tempoN[pessoasNoSistema()] += tAtual - t;
-    tTotal += tAtual - t;
-    t = tAtual;
-
     pessoa seed = e.seed();
-
-    for (std::list<evento*>::iterator i = fila.begin(); i != fila.end(); ++i)
-    {
-        evento *e1 = *i;
-        if (e1->tipo() == evento::TRANSMISSAO)
-        {
-            pessoa p = dynamic_cast<eventoTransmissao*>(e1)->origem();
-            if (p.id() == seed.id())
-            {
-                i = fila.erase(i);
-                break;
-            }
-        }
-    }
 
     for (std::list<pessoa>::iterator i = seeds.begin(); i != seeds.end(); ++i)
     {
@@ -182,10 +123,12 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
         {
             if (i->cor() == f)
             {
-                fprintf (out, "%u s %.15f\n", i->cor(), tAtual - i->chegada());
+                //fprintf (out, "%u s %.12f\n", i->cor(), tAtual - i->chegada());
                 T += tAtual - i->chegada();
                 ++saidasComputadas;
             }
+
+            setSeeds.erase(setSeeds.find(i->id()));
 
             seeds.erase(i);
             break;
@@ -196,20 +139,12 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
     {
         --possuem[i];
     }
-    printf ("%.10f: Saída do seed com id %u.\n", tAtual, seed.id());
-
     if (g.randUniforme() / (double) geradorAleatorio::RANDMAX <= pRec)
     {
-        A += (tAtual - t) * pessoasNoSistema(); 
-        if (tempoN.size() <= pessoasNoSistema()) tempoN.push_back(tAtual - t);
-        else tempoN[pessoasNoSistema()] += tAtual - t;
-        tTotal += tAtual - t;
-        t = tAtual;
         ++chegadas;
 
         peers.push_back(pessoa(pessoa::PEER, f, tAtual));
-
-        printf ("%.10f: Chegada de peer via recomendação.\n", tAtual);
+        setPeers.insert(peers.back().id());
 
         testaFimRodada();
     }
@@ -217,23 +152,18 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
 
 void filaEventos::trataTransmissao(const eventoTransmissao& e)
 {    
-    // Isso aqui é uma gambiarra para que apareça algo na tela
-    // do terminal mesmo quando eu redirecionar a saída para um
-    // arquivo como está no Makefile.
-    int ba = system("Transmissão");
-    ++ba;
-
     const pessoa *ptr = e.ptr();
     pessoa origem = e.origem(); 
 
-    agendaTransmissao(tAtual, *ptr);
+    if (e.id() != publisher.id() && setSeeds.find(e.id()) == setSeeds.end() && setPeers.find(e.id()) == setPeers.end())
+    {
+        return;
+    }
 
-    printf ("%d %s\n", peers.size(), origem.strTipo().c_str());
+    agendaTransmissao(tAtual, *ptr);
 
     if (peers.size() == 0 || (peers.size() == 1 && origem.tipo() == pessoa::PEER))
     {
-        printf ("%.10f: Tentativa de transmissão partindo do %s de id %d (%x), mas não há peers no sistema.\n",
-                tAtual, origem.strTipo().c_str(), origem.id(), origem.blocos());
         return;
     }
 
@@ -241,35 +171,31 @@ void filaEventos::trataTransmissao(const eventoTransmissao& e)
     pessoa& destino = *it;
     unsigned int blocoEscolhido = escolheBloco(origem, destino);
 
-    printf ("%.10f: Tentativa de transmissão partindo do %s de id %d (%x) para o peer de id %d (%x): ", 
-            tAtual, origem.strTipo().c_str(), origem.id(), origem.blocos(), destino.id(), destino.blocos());
-    
     if (blocoEscolhido > maxBlocos)
     {
-        printf ("falhou.\n");
         return;
     }
 
     destino.blocos() |= (1 << blocoEscolhido);
     ++possuem[blocoEscolhido];
 
-    printf ("transmitido o bloco %u.\n", blocoEscolhido);
-
     if (destino.blocosFaltantes() == 0)
     {
         if (it->cor() == f)
         {
-            fprintf (out, "%u d %.15f\n", it->cor(), tAtual - it->chegada());
+            //fprintf (out, "%u d %.12f\n", it->cor(), tAtual - it->chegada());
+
             D += tAtual - destino.chegada();
+            tDownloads.push_back(tAtual - destino.chegada());
             ++downloadsConcluidos;
         }
 
         destino.viraSeed();
+        setPeers.erase(setPeers.find(it->id()));
+        setSeeds.insert(it->id());
         peers.erase(it);
         seeds.push_back(destino);
         agendaSaidaSeed(tAtual, destino);
-
-        printf ("%.10f: Peer de id %u completou o download e agora é um seed.\n", tAtual, destino.id());
     }
 }
 
@@ -310,7 +236,6 @@ unsigned int filaEventos::escolheBloco(const pessoa& origem, const pessoa& desti
     unsigned int blocoEscolhido = 0;
     unsigned int blocosPossiveis = origem.blocosPossiveis(destino);
     unsigned int numBlocosPossiveis = __builtin_popcount(blocosPossiveis);
-    printf ("Posso transmitir algum em %s.\n", binario(blocosPossiveis, maxBlocos).c_str());
 
     if (numBlocosPossiveis == 0)
     {
@@ -349,69 +274,64 @@ void filaEventos::testaFimRodada()
 {
     if ((f == TRANSIENTE && chegadas == DELTA) || (f != TRANSIENTE && chegadas == TAMRODADA))
     {
-        fprintf (out, "Tempo médio de permanência no sistema: %.15f (%u saídas computadas)\n", T / saidasComputadas, saidasComputadas);
-        fprintf (out, "Tempo médio de download: %.15f (%u downloads concluídos)\n", D / downloadsConcluidos, downloadsConcluidos);
-        fprintf (out, "Número médio de pessoas no sistema: %.15f (%.15f tempo decorrido)\n", A / tTotal, tTotal);
-        fprintf (out, "Vazão: %.15f\n", V / (tAtual - tRodada));
-
-        double tmp = 0;
         for (int i = 0; i < (int) tempoN.size(); ++i)
         {
-            tmp += tempoN[i];
+            saidaTempoN.push_back(tempoN[i] / tTotal);
         }
-        for (int i = 0; i < (int) tempoN.size(); ++i)
-        {
-            fprintf (out, "%d: %f, ", i, tempoN[i] / tmp);
-            saidaTempoN.push_back(tempoN[i]);
-            tempoN[i] = 0;
-        }
-        fprintf (out, "\n");
+        tempoN.clear();
 
         double tmp1 = T / saidasComputadas - T0,
                tmp2 = D / downloadsConcluidos - D0,
                tmp3 = A / tTotal - A0,
-               tmp4 = V / (tAtual - tRodada) - V0;
+               tmp4 = V / (tAtual - tRodada) - V0,
+               tmp5 = P / tTotal - P0;
         if (tmp1 < 0) tmp1 *= -1;
         if (tmp2 < 0) tmp2 *= -1;
         if (tmp3 < 0) tmp3 *= -1;
         if (tmp4 < 0) tmp4 *= -1;
+        if (tmp5 < 0) tmp5 *= -1;
 
+        double tmp;
         tmp = std::max(tmp1, tmp2);
         tmp = std::max(tmp, tmp3);
         tmp = std::max(tmp, tmp4);
+        tmp = std::max(tmp, tmp5);
         tmp = std::max(tmp, A1);
         tmp = std::max(tmp, D1);
         tmp = std::max(tmp, T1);
         tmp = std::max(tmp, V1);
+        tmp = std::max(tmp, P1);
         T1 = tmp1;
         D1 = tmp2;
         A1 = tmp3;
         V1 = tmp4;
+        P1 = tmp5;
 
-        fprintf (out, "Debug: %.15f\n", tmp);
+        if (f != TRANSIENTE) printf ("Encerrada fase %u. Total de %u saidas (%u computadas). Tempo da rodada: %.12f\n", f, saidas, saidasComputadas, tTotal);
+        //else fprintf (out, "Encerrada a fase transiente.\n");
+
+        fprintf (out, "Debug: %.12f\n", tmp);
         T0 = T / saidasComputadas;
         D0 = D / downloadsConcluidos;
         A0 = A / tTotal;
         V0 = V / (tAtual - tRodada);
+        P0 = P / tTotal;
         chegadas = 0;
         saidas = 0;
         saidasComputadas = 0;
         downloadsConcluidos = 0;
         tRodada = tAtual;
-        t = 0;
         tTotal = 0;
-        A = 0;
+        A = 0; 
         T = 0;
         D = 0;
         V = 0;
+        P = 0;
 
         if (f == TRANSIENTE && tmp > EPS)
         {
             return;
         }
-
-        if (f != TRANSIENTE) printf ("Encerrada fase %u. Total de %u saidas.\n", f, saidas);
-        else fprintf (out, "Encerrada a fase transiente.\n");
 
         if (f != TRANSIENTE) fimDeRodada = true;
         ++f;
@@ -448,6 +368,7 @@ bool filaEventos::fimRodada()
     if (fimDeRodada)
     {
         fimDeRodada = false;
+
         return true;
     }
 
@@ -456,12 +377,21 @@ bool filaEventos::fimRodada()
 
 std::vector<double> filaEventos::tempoPorN()
 {
-    return saidaTempoN;
+    std::vector<double> t = saidaTempoN;
+    saidaTempoN.clear();
+    return t;
 }
 
 std::vector<double> filaEventos::temposDeDownload()
 {
-    return tDownloads;
+    std::vector<double> t = tDownloads;
+    tDownloads.clear();
+    return t;
+}
+
+double filaEventos::mediaPermanencia()
+{
+    return T0;
 }
 
 double filaEventos::mediaDownload()
@@ -472,6 +402,11 @@ double filaEventos::mediaDownload()
 double filaEventos::mediaPessoas()
 {
     return A0;
+}
+
+double filaEventos::mediaPeers()
+{
+    return P0;
 }
 
 double filaEventos::mediaVazao()
