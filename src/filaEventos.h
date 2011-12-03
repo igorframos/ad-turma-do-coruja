@@ -18,31 +18,42 @@
 class filaEventos
 {
     // Atenção: letras correspondentes a uma taxa são, na verdade, a média (1 / taxa).
-    // Isso facilita tratar casos como gamma = infinito.
-    // Pode dar problema com o caso em que não chegam peers, mas esse é mais fácil de tratar.
-    double lambda, mu, gamma, U;
-    double pRec;
-    double tAtual;
+    // Isso facilita na hora de tratar casos como gamma = infinito.
+    double lambda,      // Taxa de chegadas de peers.
+           mu,          // Taxa de upload dos peers e seeds.
+           gamma,       // 1 / gamma é o tempo médio de permanência de um seed.
+           U,           // Taxa de upload do publisher.
+           pRec,        // Probabilidade de recomendação.
+           tAtual;      // Tempo atual de simulação.
     geradorAleatorio g;
-    std::set<std::pair<double,evento*> > fila;
+    std::set<std::pair<double,evento*> > fila;  // Fila de eventos.
     pessoa publisher;
     std::list<pessoa> peers;
     std::list<pessoa> seeds;
     std::set<int> setPeers;
     std::set<int> setSeeds;
-    int pPeer, pBloco;
-    double T, T0, T1, D, D0, D1, A, A0, A1, V, V0, V1, P, P0, P1;
-    double t, tTotal, tRodada;
-    unsigned int f;
-    unsigned int maxBlocos;
-    unsigned int saidas, chegadas, saidasComputadas, downloadsConcluidos;
-    std::vector<unsigned int> possuem;
-    std::vector<double> tempoN;
-    FILE* out;
+    int pPeer, pBloco;                  // Políticas de escolha de peer e bloco.
+    double T, T0, T1,                   // Tempo médio de permanência no sistema.
+           D, D0, D1,                   // Tempo médio de download.
+           A, A0, A1,                   // Área do gráfico Pessoas no sistema x Tempo.
+           V, V0, V1,                   // Vazão média do sistema.
+           P, P0, P1;                   // Área do gráfico Peers no sistema x Tempo.
+    double t,                           // Último tempo em que foram computadas áreas. 
+           tTotal,                      // Tempo total da rodada.
+           tRodada,                     // Momento de início da rodada.
+           fimTrans;                    // Tempo até o fim da fase transiente do cenário.
+    unsigned int f;                     // Rodada atual.
+    unsigned int maxBlocos;             // Número de blocos do arquivo.
+    unsigned int saidas,                // Total de saídas na rodada.
+                 chegadas,              // Total de chegadas na rodada.
+                 saidasComputadas,      // Saídas de seeds da cor da rodada.
+                 downloadsConcluidos;   // Downloads concluídos por peers da cor da rodada.
+    std::vector<unsigned int> possuem;  // Número de pessoas que possuem cada bloco excluindo o publisher.
+    std::vector<double> tempoN;         // Tempo em que o sistema esteve com um determinado número de pessoas.
 
-    bool fimDeRodada;
-    std::vector<double> tDownloads;
-    std::vector<double> saidaTempoN;
+    bool fimDeRodada;                   // Determina se a rodada acabou para repassar.
+    std::vector<double> tDownloads;     // Todos os tempos de download da rodada.
+    std::vector<double> saidaTempoN;    // Tempo em que o sistema esteve com um determinado número de pessoas para repassar.
 
     void agendaChegadaPeer(double t);
     void agendaSaidaSeed(double t, const pessoa& p);
@@ -61,9 +72,6 @@ class filaEventos
 
     public:
         filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais, unsigned int arqInicial);
-        // pRec = probabilidade de recomendarem
-        // pPeer = seleção de peer
-        // pBloco = seleção de bloco
 
         bool haEvento();
         void trataProximoEvento();
@@ -82,15 +90,14 @@ class filaEventos
         double mediaPessoas();
         double mediaDownload();
         double mediaPermanencia();
+        double fimFaseTransiente();
 
-        const static unsigned int TRANSIENTE = 0;
-        const static unsigned int DELTA = 175;
-        const static unsigned int TAMRODADA = 5000;
-        const static double EPS = 1.0;
+        const static unsigned int TRANSIENTE = 0;   // Código da fase transiente.
+        const static unsigned int DELTA = 175;      // Número de chegadas até um teste do fim da fase transiente.
+        const static unsigned int TAMRODADA = 5000; // Número de chegadas em uma rodada.
+        const static double EPS = 1.0;              // Diferença máxima entre duas médias para considerarmos a fase transiente terminada.
         enum politicas{RANDOM_PEER, RANDOM_PIECE, RAREST_FIRST};
 };
-
-std::string binario(unsigned int x, unsigned int alg);
 
 #endif
 
