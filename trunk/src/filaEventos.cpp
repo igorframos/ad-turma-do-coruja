@@ -2,7 +2,7 @@
 
 // O construtor inicializa todas as muitas variáveis da simulação.
 filaEventos::filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais, unsigned int arqInicial) : 
-    lambda(lambda), mu(mu), gamma(gamma), U(U), pRec(pRec), tAtual(0), g(geradorAleatorio(2065)), publisher(pessoa(pessoa::PUBLISHER, -1, 0)), pPeer(pPeer), pBloco(pBloco), T(0), T0(0), T1(0), D(0), D0(0), D1(0), A(0), A0(0), A1(0), V(0), V0(0), V1(0), P(0), P0(0), P1(0), t(0), tTotal(0), tRodada(0), f(TRANSIENTE), fimDeRodada(false)
+    lambda(lambda), mu(mu), gamma(gamma), U(U), pRec(pRec), tAtual(0), g(geradorAleatorio(time(NULL) % 10000 + 1)), publisher(pessoa(pessoa::PUBLISHER, -1, 0)), pPeer(pPeer), pBloco(pBloco), T(0), T0(0), T1(0), D(0), D0(0), D1(0), A(0), A0(0), A1(0), V(0), V0(0), V1(0), P(0), P0(0), P1(0), t(0), tTotal(0), tRodada(0), f(TRANSIENTE), fimDeRodada(false)
 {
     if (peersIniciais == 0) // Condição bem específica desse trabalho.
         agendaChegadaPeer(tAtual);
@@ -24,7 +24,20 @@ filaEventos::filaEventos(double lambda, double mu, double gamma, double U, doubl
         peers.push_back(pessoa(pessoa::PEER, 0, 0));
         setPeers.insert(peers.back().id());
         peers.back().blocos() = arqInicial;
+        for (int i = 0; i < maxBlocos; ++i)
+        {
+            if (arqInicial & (1 << i)) ++possuem[i];
+        }
+
         agendaTransmissao(tAtual, peers.back());
+    }
+}
+
+filaEventos::~filaEventos()
+{
+    while (!fila.empty())
+    {
+        fila.erase(fila.begin());
     }
 }
 
@@ -145,7 +158,7 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
         }
     }
 
-    // Com a saída do seed, o número de pessoas que possuem todos os blocos diminui em 1.
+    // Com a saída do seed, o número de pessoas que possuem cada um dos blocos diminui em 1.
     for (unsigned int i = 0; i < maxBlocos; ++i)
     {
         --possuem[i];
@@ -281,6 +294,8 @@ unsigned int filaEventos::escolheBloco(const pessoa& origem, const pessoa& desti
                 blocoEscolhido = bloco;
             }
         }
+
+        if (!(blocosPossiveis & (1 << blocoEscolhido))) blocoEscolhido = maxBlocos + 1;
     }
 
     return blocoEscolhido;

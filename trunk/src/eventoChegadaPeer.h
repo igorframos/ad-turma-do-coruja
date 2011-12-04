@@ -5,6 +5,10 @@
 
 class eventoChegadaPeer : public evento
 {
+    // Evento de chegada de peer não guarda nenhuma informação
+    // adicional. Só é preciso saber o momento em que o próximo
+    // peer chegará e isto é um campo da classe pai evento.
+
     public:
         eventoChegadaPeer(double t);
 };

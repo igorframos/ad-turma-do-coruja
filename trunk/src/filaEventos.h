@@ -72,6 +72,7 @@ class filaEventos
 
     public:
         filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais, unsigned int arqInicial);
+        ~filaEventos();
 
         bool haEvento();
         void trataProximoEvento();

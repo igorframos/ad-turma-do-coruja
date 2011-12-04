@@ -1,7 +1,9 @@
 #include "geradorAleatorio.h"
 
+// A semente padrão é 1.
 geradorAleatorio::geradorAleatorio() : seed(1) {}
 
+// Pode-se escolher uma semente diferente de 1.
 geradorAleatorio::geradorAleatorio(unsigned int seed) : seed(seed) {}
 
 unsigned int geradorAleatorio::randUniforme()
