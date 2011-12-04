@@ -48,7 +48,8 @@ int main(int argc, char *argv[])
         pessoa::nextId = 0;
         pessoa::arqCompleto = arquivo;
         
-        printf ("Começarei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %.1f e população inicial de %d\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial);
+        printf ("Começarei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %.1f, população inicial de %d, arquivo inicial %x e políticas %c (peer) %c (bloco)\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial, arqInicial, politicaPeer, politicaBloco);
+
 
         // Chama o construtor do simulador de um cenário.
         filaEventos f(1/lambda, 1/mu, 1/gamma, 1/U, pRec, pPeer, pBloco, populacaoInicial, arqInicial);
@@ -146,7 +147,11 @@ int main(int argc, char *argv[])
             Ud = mu + 1.96 * sigma / sqrt(n);
             pd = 100 * 1.96 * sigma / (mu * sqrt(n));
 
-            if (pd > 10) encerra = false;
+            if (pd > 10)
+            {
+                if (encerra) printf ("Tempo de Download não estabilizou.\n");
+                encerra = false;
+            }
 
             mu = vazao / n;
             sigma = sqrt((vazao2 - 2 * mu * vazao + n * mu * mu) / (n - 1));
@@ -154,7 +159,11 @@ int main(int argc, char *argv[])
             Uv = mu + 1.96 * sigma / sqrt(n);
             pv = 100 * 1.96 * sigma / (mu * sqrt(n));
 
-            if (pv > 10) encerra = false;
+            if (pv > 10)
+            {
+                if (encerra) printf ("Vazão não estabilizou.\n");
+                encerra = false;
+            }
 
             mu = pessoas / n;
             sigma = sqrt((pessoas2 - 2 * mu * pessoas + n * mu * mu) / (n - 1));
@@ -162,7 +171,11 @@ int main(int argc, char *argv[])
             Un = mu + 1.96 * sigma / sqrt(n);
             pn = 100 * 1.96 * sigma / (mu * sqrt(n));
 
-            if (pn > 10) encerra = false;
+            if (pn > 10)
+            {
+                if (encerra) printf ("Número de pessoas no sistema não estabilizou.\n");
+                encerra = false;
+            }
 
             mu = peers / n;
             sigma = sqrt((peers2 - 2 * mu * peers + n * mu * mu) / (n - 1));
@@ -170,7 +183,11 @@ int main(int argc, char *argv[])
             Up = mu + 1.96 * sigma / sqrt(n);
             pp = 100 * 1.96 * sigma / (mu * sqrt(n));
 
-            if (pp > 10) encerra = false;
+            if (pp > 10)
+            {
+                if (encerra) printf ("Número de peers no sistema não estabilizou.\n");
+                encerra = false;
+            }
 
             mu = tempo / n;
             sigma = sqrt((tempo2 - 2 * mu * tempo + n * mu * mu) / (n - 1));
@@ -178,7 +195,11 @@ int main(int argc, char *argv[])
             Ut = mu + 1.96 * sigma / sqrt(n);
             pt = 100 * 1.96 * sigma / (mu * sqrt(n));
 
-            if (pt > 10) encerra = false;
+            if (pt > 10)
+            {
+                if (encerra) printf ("Tempo de permanência no sistema não estabilizou.\n");
+                encerra = false;
+            }
 
             printf ("Rodada %d\n", n);
             printf ("\tDownload:    %.12f (%.12f, %.12f) %.12f\n", tempoDownload / n, Ld, Ud, pd);
@@ -190,7 +211,7 @@ int main(int argc, char *argv[])
             if (encerra == true) break;
         }
 
-        printf ("Encerrei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %.1f e população inicial de %d\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial);
+        printf ("Encerrei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %.1f, população inicial de %d, arquivo inicial %x e políticas %c (peer) %c (bloco)\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial, arqInicial, politicaPeer, politicaBloco);
 
         // Daqui em diante é só impressão dos resultados no arquivo de saída.
         double mud = tempoDownload / n;
@@ -198,7 +219,7 @@ int main(int argc, char *argv[])
         double mun = pessoas / n;
         double mup = peers / n;
         double mut = tempo / n;
-        fprintf (resultados, "Cenário: %d - Arquivo: %x - lambda: %.1f - População Inicial: %d - Rodadas: %d\n", cenario, arquivo, lambda, populacaoInicial, n);
+        fprintf (resultados, "Cenário: %d - Arquivo: %x - lambda: %.1f - População Inicial: %d - Rodadas: %d - Arquivo inicial: %x - Políticas: %c (peer) %c (bloco)\n", cenario, arquivo, lambda, populacaoInicial, n, arqInicial, politicaPeer, politicaBloco);
         fprintf (resultados, "Duração da Fase transiente: %.12f\n", f.fimFaseTransiente());
         fprintf (resultados, "Média (Tempo de Download): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mud, Ld, Ud, pd);
         fprintf (resultados, "Média (Tempo de Permanência): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mut, Lt, Ut, pt);

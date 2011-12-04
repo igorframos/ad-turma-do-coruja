@@ -6,9 +6,11 @@
 class evento
 {
     protected:
-        int tp;
-        double t;
-        unsigned int k;
+        int tp;         // Tipo de evento. (Valor vem do ENUM tipoEvento.)
+        double t;       // Tempo de ocorrência do evento.
+        unsigned int k; // Identificador do evento. Uma precaução até excessiva para que
+                        // eventos diferentes não sejam avaliados como iguais pelo
+                        // operador <.
 
     public:
         evento(int tp, double t);
@@ -23,7 +25,7 @@ class evento
 
         enum tipoEvento{CHEGADA_PEER, SAIDA_PEER, TRANSMISSAO};
 
-        static unsigned int nextId;
+        static unsigned int nextId; // Forma de criar os id de forma incremental.
 };
 
 #endif

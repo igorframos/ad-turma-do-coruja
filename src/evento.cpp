@@ -6,6 +6,8 @@ evento::evento (int tp, double t) : tp(tp), t(t), k(nextId++) {}
 
 evento::~evento() {}
 
+// Um evento deve vir antes de outro em uma ordenação se o tempo for menor.
+// Se forem iguais os tempos, escolha o que foi criado primeiro.
 bool evento::operator< (const evento& b) const
 {
     if (tempo() != b.tempo()) return t < b.tempo();
@@ -27,6 +29,8 @@ double evento::tempo() const
     return t;
 }
 
+// Apenas para dizer o tipo de evento na forma de string e facilitar impressão
+// para debug e afins. Não é utilizado em lugar nenhum agora que terminamos.
 std::string evento::strTipo() const
 {
     switch (tp)

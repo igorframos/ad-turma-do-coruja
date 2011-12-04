@@ -6,8 +6,8 @@
 
 class eventoTransmissao : public evento
 {
-    const pessoa* p;
-    const unsigned int src;
+    const pessoa* p;        // Pessoa que irá transmitir.
+    const unsigned int src; // Id da pessoa que irá transmitir.
 
     public:
         eventoTransmissao(double t, const pessoa* p);

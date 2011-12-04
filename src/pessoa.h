@@ -5,12 +5,12 @@
 
 class pessoa
 {
-    int tp;
-    unsigned int k;
-    unsigned int b;
-    unsigned int c;
+    int tp;         // Tipo que vem do Enum tipoPessoa.
+    unsigned int k; // Identificador. Forma única de referenciar a pessoa.
+    unsigned int b; // Configuração do arquivo possuído pela pessoa.
+    unsigned int c; // Cor da pessoa, ou seja, a qual rodada ela pertence.
 
-    double a;
+    double a;       // Tempo de chegada da pessoa no sistema.
 
     public:
         pessoa(const int tp, const unsigned int c, const double a);
@@ -22,10 +22,13 @@ class pessoa
         unsigned int& blocos();
         unsigned int cor() const;
 
+        // Determina quantos blocos faltam para esta pessoa concluir o download.
         unsigned int blocosFaltantes() const;
+
+        // Determina quais blocos esta pessoa pode enviar para a pessoa p.
         unsigned int blocosPossiveis(const pessoa& p) const;
 
-        void viraSeed();
+        void viraSeed();    // Quando termina o download, o peer deve virar seed.
 
         std::string strTipo() const;
 
@@ -33,8 +36,8 @@ class pessoa
 
         enum tipoPessoa{PUBLISHER, PEER, SEED};
 
-        static unsigned int nextId;
-        static unsigned int arqCompleto;
+        static unsigned int nextId;         // Forma de criar ids incrementalmente.
+        static unsigned int arqCompleto;    // Arquivo completo para referência.
 };
 
 #endif

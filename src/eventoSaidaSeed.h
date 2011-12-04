@@ -7,13 +7,13 @@
 
 class eventoSaidaSeed : public evento
 {
-    const pessoa *p;
+    const pessoa *p;    // Ponteiro para o seed que irá sair.
 
     public:
         eventoSaidaSeed(double t, const pessoa *p);
 
-        pessoa seed() const;
-        const pessoa *ptr() const;
+        pessoa seed() const;        // Retorna a instância de pessoa.
+        const pessoa *ptr() const;  // Retorna o ponteiro para a pessoa.
 };
 
 #endif
