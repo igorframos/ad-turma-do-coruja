@@ -13,6 +13,9 @@ int main(int argc, char *argv[])
 
     // Arquivo para onde vão os resultados no final da simulação.
     FILE* resultados = fopen("resultados.txt", "w");
+    FILE* plot = fopen("log/plotInfo.txt", "w");
+
+    fprintf (plot, "set termoption enhanced\nset encoding utf8\nset key horiz\nset key outside\nset key bot center\nset terminal png size 1024,768\n");
 
     while (1)
     {
@@ -47,12 +50,34 @@ int main(int argc, char *argv[])
         evento::nextId = 0;
         pessoa::nextId = 0;
         pessoa::arqCompleto = arquivo;
+
+        char arqOut[64];
+        char plotTitle[128];
+
+        if (cenario <= 2)
+        {
+            sprintf (arqOut, "log/cen%dlam%.1f.txt", cenario, lambda);
+            sprintf (plotTitle, "Cenário %d - λ = %.1f", cenario, lambda); 
+        }
+        else if (cenario == 3)
+        {
+            sprintf (arqOut, "log/cen%dini%03d.txt", cenario, populacaoInicial);
+            sprintf (plotTitle, "Cenário %d - População inicial: %d", cenario, populacaoInicial);
+        }
+        else
+        {
+            sprintf (arqOut, "log/cen%db%02dini%02dai%02x%c%c.txt", cenario, __builtin_popcount(arquivo), populacaoInicial, arqInicial, politicaPeer, politicaBloco);
+            sprintf (plotTitle, "Cenário %d - Blocos: %d - População inicial: %d - Condição inicial: %d bloco - Políticas: %c & %c", cenario, __builtin_popcount(arquivo), populacaoInicial, arqInicial, politicaPeer, politicaBloco);
+        }
+
+        fprintf (plot, "set title \"%s\"\n", plotTitle);
+        fprintf (plot, "set output \"%s.png\"\nplot \"%s\" u 1:2 title \"Permanência\" with lines lw 2, \"%s\" u 1:3 title \"Download\" with lines lw 2, \"%s\" u 1:4 title \"N\" with lines lw 2, \"%s\" u 1:5 title \"Vazão\" with lines lw 2, \"%s\" u 1:6 title \"Peers\" with lines lw 2\n", arqOut, arqOut, arqOut, arqOut, arqOut, arqOut);
         
         printf ("Começarei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %.1f, população inicial de %d, arquivo inicial %x e políticas %c (peer) %c (bloco)\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial, arqInicial, politicaPeer, politicaBloco);
 
 
         // Chama o construtor do simulador de um cenário.
-        filaEventos f(1/lambda, 1/mu, 1/gamma, 1/U, pRec, pPeer, pBloco, populacaoInicial, arqInicial);
+        filaEventos f(1/lambda, 1/mu, 1/gamma, 1/U, pRec, pPeer, pBloco, populacaoInicial, arqInicial, arqOut);
 
         // Essas são as variáveis usadas nos cálculos de intervalos de confiança.
         // var tem a soma das rodadas, var2 a soma dos quadrados das rodadas,
@@ -76,6 +101,8 @@ int main(int argc, char *argv[])
 
             ++n;
 
+            printf ("Rodada %d\n", n);
+
             // Recupera os dados da simulação de uma rodada.
             double mediaDownload = f.mediaDownload();
             double mediaVazao = f.mediaVazao();
@@ -83,8 +110,8 @@ int main(int argc, char *argv[])
             double mediaPeers = f.mediaPeers();
             double mediaT = f.mediaPermanencia();
 
-            // Só é preciso fazer a CDF de T no cenário 2, então só pegamos esses dados neste cenário.
-            if (cenario == 2) temposDownload.push_back(f.temposDeDownload());
+            // Só é preciso fazer a CDF de T nos cenários 1 e 2, então só pegamos esses dados neste cenário.
+            if (cenario == 1 || cenario == 2) temposDownload.push_back(f.temposDeDownload());
 
             tempoDownload += mediaDownload;
             tempoDownload2 += mediaDownload * mediaDownload;
@@ -116,7 +143,7 @@ int main(int argc, char *argv[])
                 }
             }
 
-            // Com menos de duas rodads nem podemos calcular o intervalo de confiança.
+            // Com menos de duas rodadas nem podemos calcular o intervalo de confiança.
             if (n < 2) continue;
 
             // Os resultados só valem com 30 rodadas ou mais, que é quando a distribuição t-Student
@@ -201,7 +228,6 @@ int main(int argc, char *argv[])
                 encerra = false;
             }
 
-            printf ("Rodada %d\n", n);
             printf ("\tDownload:    %.12f (%.12f, %.12f) %.12f\n", tempoDownload / n, Ld, Ud, pd);
             printf ("\tPermanencia: %.12f (%.12f, %.12f) %.12f\n", tempo / n, Lt, Ut, pt);
             printf ("\tVazão:       %.12f (%.12f, %.12f) %.12f\n", vazao / n, Lv, Uv, pv);
@@ -220,7 +246,7 @@ int main(int argc, char *argv[])
         double mup = peers / n;
         double mut = tempo / n;
         fprintf (resultados, "Cenário: %d - Arquivo: %x - lambda: %.1f - População Inicial: %d - Rodadas: %d - Arquivo inicial: %x - Políticas: %c (peer) %c (bloco)\n", cenario, arquivo, lambda, populacaoInicial, n, arqInicial, politicaPeer, politicaBloco);
-        fprintf (resultados, "Duração da Fase transiente: %.12f\n", f.fimFaseTransiente());
+        fprintf (resultados, "Duração da Fase transiente: %.12f (%u chegadadas)\n", f.fimFaseTransiente(), f.eventosFaseTransiente());
         fprintf (resultados, "Média (Tempo de Download): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mud, Ld, Ud, pd);
         fprintf (resultados, "Média (Tempo de Permanência): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mut, Lt, Ut, pt);
         fprintf (resultados, "Média (Vazão): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", muv, Lv, Uv, pv);
@@ -231,6 +257,18 @@ int main(int argc, char *argv[])
         {
             fprintf (resultados, "pmf do Número total de usuários no sistema:\n");
             for (int i = 0; i < (int) tempoPorN.size(); ++i) fprintf (resultados, "\t%u: %.12f - IC: (%.12f, %.12f) %.12f\n", i, tempoPorN[i] / n, LpN[i], UpN[i], ppN[i]);
+
+            char arqpmf[64];
+            sprintf (arqpmf, "log/cen%dlam%.1fpmf.txt", cenario, lambda);
+            FILE* arq = fopen(arqpmf, "w");
+
+            for (int i = 0; i < (int) tempoPorN.size(); ++i) fprintf (arq, "%u %.12f %.12f %.12f\n", i, tempoPorN[i] / n, std::max(LpN[i], 0.0), UpN[i]);
+
+            fclose(arq);
+
+            fprintf (plot, "set title \"pmf de N: Cenário %d - λ = %.1f\"\n", cenario, lambda);
+            fprintf (plot, "set output \"%s.png\"\nplot \"%s\" u 1:2:3:4 title \"pmf\" with yerrorbars lt 8 lw 2\n", arqpmf, arqpmf);
+
             tempoPorN.clear();
             tempoPorN2.clear();
             LpN.clear();
@@ -238,20 +276,44 @@ int main(int argc, char *argv[])
             ppN.clear();
         }
 
-        if (cenario == 2)
+        if (cenario == 1 || cenario == 2)
         {
-            fprintf (resultados, "Tempos de download por rodada:\n");
+            char plotline[2048];
+            plotline[0] = 0;
+
             for (int i = 0; i < n; ++i)
             {
+                char arqCDF[64];
+                sprintf (arqCDF, "log/cen%dlam%.1fCDF%02d.txt", cenario, lambda, i+1);
+                FILE* plotCDF = fopen(arqCDF, "w");
+
                 sort(temposDownload[i].begin(), temposDownload[i].end());
-                fprintf (resultados, "\tRodada %d:", i+1);
-                for (int j = 0; j < (int) temposDownload[i].size(); ++j) fprintf (resultados, " %.12f", temposDownload[i][j]);
-                fprintf (resultados, "\n");
+
+                double p = 1.0 / temposDownload[i].size();
+                for (int j = 0; j < (int) temposDownload[i].size(); ++j, p += 1.0 / temposDownload[i].size())
+                {
+                    fprintf (plotCDF, "%.12f %.12f\n", temposDownload[i][j], p);
+                }
+
+                fclose(plotCDF);
+
+                char tmp[64];
+                sprintf (tmp, "\"%s\" title \"Rodada %d\" with lines,", arqCDF, i+1);
+
+                strcat(plotline, tmp);
             }
             temposDownload.clear();
+
+            plotline[strlen(plotline) - 1] = 0;
+            
+            fprintf (plot, "set title \"CDF: tempo de download - Cenário %d - λ = %.1f\"\n", cenario, lambda);
+            fprintf (plot, "set output \"log/cen%dlam%.1fCDF.png\"\nplot %s\n", cenario, lambda, plotline);
         }
         fprintf (resultados, "\n");
     }
+
+    fclose(resultados);
+    fclose(plot);
 
     return 0;
 }

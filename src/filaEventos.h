@@ -43,11 +43,16 @@ class filaEventos
            tRodada,                     // Momento de início da rodada.
            fimTrans;                    // Tempo até o fim da fase transiente do cenário.
     unsigned int f;                     // Rodada atual.
+    unsigned int n;                     // Número de chegadas total.
     unsigned int maxBlocos;             // Número de blocos do arquivo.
     unsigned int saidas,                // Total de saídas na rodada.
+                 totalSaidas,           // Total de saídas ao longo de toda a simulação.
                  chegadas,              // Total de chegadas na rodada.
                  saidasComputadas,      // Saídas de seeds da cor da rodada.
-                 downloadsConcluidos;   // Downloads concluídos por peers da cor da rodada.
+                 downloadsConcluidos,   // Downloads concluídos por peers da cor da rodada.
+                 downloadsTotais,       // Todos os downloads da simulação.
+                 eventosFimTrans;       // Número de chegadas e saídas até o fim da fase transiente.
+    FILE* out;                          // Onde gravar dados sobre fase transiente.
     std::vector<unsigned int> possuem;  // Número de pessoas que possuem cada bloco excluindo o publisher.
     std::vector<double> tempoN;         // Tempo em que o sistema esteve com um determinado número de pessoas.
 
@@ -71,7 +76,7 @@ class filaEventos
     unsigned int escolheBloco(const pessoa& origem, const pessoa& destino);
 
     public:
-        filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais, unsigned int arqInicial);
+        filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais, unsigned int arqInicial, char arqOut[64]);
         ~filaEventos();
 
         bool haEvento();
@@ -92,11 +97,12 @@ class filaEventos
         double mediaDownload();
         double mediaPermanencia();
         double fimFaseTransiente();
+        unsigned int eventosFaseTransiente();
 
         const static unsigned int TRANSIENTE = 0;   // Código da fase transiente.
-        const static unsigned int DELTA = 175;      // Número de chegadas até um teste do fim da fase transiente.
+        const static unsigned int DELTA = 200;      // Número de chegadas até um teste do fim da fase transiente.
         const static unsigned int TAMRODADA = 5000; // Número de chegadas em uma rodada.
-        const static double EPS = 1.0;              // Diferença máxima entre duas médias para considerarmos a fase transiente terminada.
+        const static double EPS = 0.05;           // Diferença máxima entre duas médias para considerarmos a fase transiente terminada.
         enum politicas{RANDOM_PEER, RANDOM_PIECE, RAREST_FIRST};
 };
 

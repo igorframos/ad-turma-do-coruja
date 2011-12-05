@@ -1,8 +1,8 @@
 #include "filaEventos.h"
 
 // O construtor inicializa todas as muitas variáveis da simulação.
-filaEventos::filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais, unsigned int arqInicial) : 
-    lambda(lambda), mu(mu), gamma(gamma), U(U), pRec(pRec), tAtual(0), g(geradorAleatorio(time(NULL) % 10000 + 1)), publisher(pessoa(pessoa::PUBLISHER, -1, 0)), pPeer(pPeer), pBloco(pBloco), T(0), T0(0), T1(0), D(0), D0(0), D1(0), A(0), A0(0), A1(0), V(0), V0(0), V1(0), P(0), P0(0), P1(0), t(0), tTotal(0), tRodada(0), f(TRANSIENTE), fimDeRodada(false)
+filaEventos::filaEventos(double lambda, double mu, double gamma, double U, double pRec, int pPeer, int pBloco, int peersIniciais, unsigned int arqInicial, char arqOut[64]):
+    lambda(lambda), mu(mu), gamma(gamma), U(U), pRec(pRec), tAtual(0), g(geradorAleatorio(time(NULL) % 10000 + 1)), publisher(pessoa(pessoa::PUBLISHER, -1, 0)), pPeer(pPeer), pBloco(pBloco), T(0), T0(0), T1(0), D(0), D0(0), D1(0), A(0), A0(0), A1(0), V(0), V0(0), V1(100), P(0), P0(0), P1(0), t(0), tTotal(0), tRodada(0), f(TRANSIENTE), n(0), fimDeRodada(false)
 {
     if (peersIniciais == 0) // Condição bem específica desse trabalho.
         agendaChegadaPeer(tAtual);
@@ -12,7 +12,10 @@ filaEventos::filaEventos(double lambda, double mu, double gamma, double U, doubl
     saidas = 0;
     chegadas = 0;
     saidasComputadas = 0;
+    totalSaidas = 0;
     downloadsConcluidos = 0;
+    downloadsTotais = 0;
+    eventosFimTrans = 0;
 
     for (unsigned int i = 0; i < maxBlocos; ++i)
     {
@@ -24,17 +27,22 @@ filaEventos::filaEventos(double lambda, double mu, double gamma, double U, doubl
         peers.push_back(pessoa(pessoa::PEER, 0, 0));
         setPeers.insert(peers.back().id());
         peers.back().blocos() = arqInicial;
-        for (int i = 0; i < maxBlocos; ++i)
+        for (unsigned int i = 0; i < maxBlocos; ++i)
         {
             if (arqInicial & (1 << i)) ++possuem[i];
         }
 
         agendaTransmissao(tAtual, peers.back());
     }
+
+    out = fopen(arqOut, "w");
+
+    fprintf (out, "0 0 0 0 0 0\n");
 }
 
 filaEventos::~filaEventos()
 {
+    fclose(out);
     while (!fila.empty())
     {
         fila.erase(fila.begin());
@@ -92,8 +100,10 @@ void filaEventos::trataProximoEvento()
     // Esse trecho vai atualizar as áreas de gráfico que dão o número de pessoas e de
     // peers no sistema em um dado momento. É feito aqui porque todos os eventos têm
     // potencial para alterar o número de pessoas ou peers no sistema. 
-    A += (tAtual - t) * pessoasNoSistema(); 
+    A += (tAtual - t) * pessoasNoSistema();
+    A1 += (tAtual - t) * pessoasNoSistema();
     P += (tAtual - t) * peersNoSistema();
+    P1 += (tAtual - t) * peersNoSistema();
     if (tempoN.size() <= pessoasNoSistema()) tempoN.push_back(tAtual - t);
     else tempoN[pessoasNoSistema()] += tAtual - t;
     tTotal += tAtual - t;
@@ -121,6 +131,16 @@ void filaEventos::trataProximoEvento()
         printf ("Evento de tipo não conhecido.\n");
     }
 
+    if (e->tipo() == evento::CHEGADA_PEER)
+    {
+        ++n;
+
+        if (n % 50 == 0 && f <= 1)
+        {
+            fprintf (out, "%u %.12f %.12f %.12f %.12f %.12f\n", n, T1/totalSaidas, D1/downloadsTotais, A1/tAtual, V1/tAtual, P1/tAtual);
+        }
+    }
+
     delete e;
 }
 
@@ -137,6 +157,7 @@ void filaEventos::trataChegadaPeer(const eventoChegadaPeer& e)
 void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
 {
     ++V;
+    ++V1;
 
     pessoa seed = e.seed();
 
@@ -150,6 +171,9 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
                 T += tAtual - i->chegada();
                 ++saidasComputadas;
             }
+
+            T1 += tAtual - i->chegada();
+            ++totalSaidas;
 
             setSeeds.erase(setSeeds.find(i->id()));
 
@@ -168,6 +192,13 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
     if (g.randUniforme() / (double) geradorAleatorio::RANDMAX <= pRec)
     {
         ++chegadas;
+        ++n;
+
+        if (n % 50 == 0 && f <= 1)
+        {
+            fprintf (out, "%u %.12f %.12f %.12f %.12f %.12f\n", n, T1/totalSaidas, D1/downloadsTotais, A1/tAtual, V1/tAtual, P1/tAtual);
+        }
+
 
         peers.push_back(pessoa(pessoa::PEER, f, tAtual));
         setPeers.insert(peers.back().id());
@@ -220,6 +251,9 @@ void filaEventos::trataTransmissao(const eventoTransmissao& e)
             tDownloads.push_back(tAtual - destino.chegada());
             ++downloadsConcluidos;
         }
+
+        D1 += tAtual - destino.chegada();
+        ++downloadsTotais;
 
         destino.viraSeed();
         setPeers.erase(setPeers.find(it->id()));
@@ -326,28 +360,13 @@ void filaEventos::testaFimRodada()
         if (tmp4 < 0) tmp4 *= -1;
         if (tmp5 < 0) tmp5 *= -1;
 
-        // Escolhe a maior das diferenças como parâmetro.
-        double tmp;
-        tmp = std::max(tmp1, tmp2);
-        tmp = std::max(tmp, tmp3);
-        tmp = std::max(tmp, tmp4);
-        tmp = std::max(tmp, tmp5);
-        tmp = std::max(tmp, A1);
-        tmp = std::max(tmp, D1);
-        tmp = std::max(tmp, T1);
-        tmp = std::max(tmp, V1);
-        tmp = std::max(tmp, P1);
-
-        // Guarda as diferenças para que tenhamos dois parâmetros como referência.
-        T1 = tmp1;
-        D1 = tmp2;
-        A1 = tmp3;
-        V1 = tmp4;
-        P1 = tmp5;
-
         if (f != TRANSIENTE) printf ("Encerrada fase %u. Total de %u saidas (%u computadas). Tempo da rodada: %.12f\n", f, saidas, saidasComputadas, tTotal);
-        else fimTrans = tAtual;
-
+        else
+        {
+            eventosFimTrans = n;
+            fimTrans = tAtual;
+        }
+        
         // Limpa resultados da rodada para calcular as próximas.
         T0 = T / saidasComputadas;
         D0 = D / downloadsConcluidos;
@@ -366,9 +385,26 @@ void filaEventos::testaFimRodada()
         V = 0;
         P = 0;
 
-        if (f == TRANSIENTE && tmp > EPS)
+        // Escolhe a maior das diferenças como parâmetro.
+        bool dif1 = tmp1 > EPS * T0,
+             dif2 = tmp2 > EPS * D0,
+             dif3 = tmp3 > EPS * A0,
+             dif4 = tmp4 > EPS * V0,
+             dif5 = tmp5 > EPS * P0;
+
+        double tmpVal = std::max(T0, D0);
+        tmpVal = std::max(tmpVal, A0);
+        tmpVal = std::max(tmpVal, V0);
+        tmpVal = std::max(tmpVal, P0);
+
+        if (f == TRANSIENTE)
         {
-            return;
+            tDownloads.clear();
+            saidaTempoN.clear();
+            if (dif1 || dif2 || dif3 || dif4 || dif5)
+            {
+                return;
+            }
         }
 
         if (f != TRANSIENTE) fimDeRodada = true;
@@ -425,6 +461,11 @@ std::vector<double> filaEventos::temposDeDownload()
     std::vector<double> t = tDownloads;
     tDownloads.clear();
     return t;
+}
+
+unsigned int filaEventos::eventosFaseTransiente()
+{
+    return eventosFimTrans;
 }
 
 double filaEventos::fimFaseTransiente()
