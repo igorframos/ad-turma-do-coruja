@@ -51,5 +51,5 @@ graph: run
 	gnuplot <log/plotInfo.txt
 
 clean:
-	rm obj/*.o bin/sim
+	rm obj/*.o bin/sim log/*
 
