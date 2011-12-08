@@ -49,6 +49,7 @@ debug: bin/sim
 
 graph: run
 	gnuplot <log/plotInfo.txt
+	rm log/*Vazao.txt
 
 clean:
 	rm obj/*.o bin/sim log/*
