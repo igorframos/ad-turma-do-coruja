@@ -11,9 +11,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    bool verbose = false;
+    if (argc > 2 && !strcmp(argv[2], "-v")) verbose = true;
+
     // Arquivo para onde vão os resultados no final da simulação.
     FILE* resultados = fopen("resultados.txt", "w");
     FILE* plot = fopen("log/plotInfo.txt", "w");
+
+    std::map<std::string,int> reg;  // Contador do número de registros em um arquivo.
 
     fprintf (plot, "set termoption enhanced\nset encoding utf8\nset key horiz\nset key outside\nset key bot center\nset terminal png size 1024,768\n");
 
@@ -32,6 +37,7 @@ int main(int argc, char *argv[])
         char politicaBloco;             // Política de escolha de bloco.
         int pBloco;                     // Código interno da política de escolha de bloco.
         unsigned int arqInicial;        // Arquivo que os peers presentes no sistem têm.
+        unsigned int numBlocos;         // Número de blocos do arquivo.
 
         int ba; // Variável só para tirar o warning de valor de retorno ignorado.
 
@@ -51,6 +57,8 @@ int main(int argc, char *argv[])
         pessoa::nextId = 0;
         pessoa::arqCompleto = arquivo;
 
+        numBlocos = __builtin_popcount(arquivo);
+
         char arqOut[64];
         char plotTitle[128];
 
@@ -66,11 +74,11 @@ int main(int argc, char *argv[])
         }
         else
         {
-            sprintf (arqOut, "log/cen%db%02dini%02dai%02x%c%c.txt", cenario, __builtin_popcount(arquivo), populacaoInicial, arqInicial, politicaPeer, politicaBloco);
-            sprintf (plotTitle, "Cenário %d - Blocos: %d - População inicial: %d - Condição inicial: %d bloco - Políticas: %c & %c", cenario, __builtin_popcount(arquivo), populacaoInicial, arqInicial, politicaPeer, politicaBloco);
+            sprintf (arqOut, "log/cen%db%02dini%02dai%d%c%c.txt", cenario, numBlocos, populacaoInicial, __builtin_popcount(arqInicial), politicaPeer, politicaBloco);
+            sprintf (plotTitle, "Cenário %d - Blocos: %d - População inicial: %d - Condição inicial: %d bloco - Políticas: %c & %c", cenario, numBlocos, populacaoInicial, __builtin_popcount(arqInicial), politicaPeer, politicaBloco);
         }
 
-        fprintf (plot, "set title \"%s\"\n", plotTitle);
+        fprintf (plot, "set title \"%s\"\nset xlabel \"Chegadas\"\n", plotTitle);
         fprintf (plot, "set output \"%s.png\"\nplot \"%s\" u 1:2 title \"Permanência\" with lines lw 2, \"%s\" u 1:3 title \"Download\" with lines lw 2, \"%s\" u 1:4 title \"N\" with lines lw 2, \"%s\" u 1:5 title \"Vazão\" with lines lw 2, \"%s\" u 1:6 title \"Peers\" with lines lw 2\n", arqOut, arqOut, arqOut, arqOut, arqOut, arqOut);
         
         printf ("Começarei o cenário %d com arquivo %x, lambda %.1f, mu %.1f, U %.1f, gamma %.1f, população inicial de %d, arquivo inicial %x e políticas %c (peer) %c (bloco)\n", cenario, arquivo, lambda, mu, U, gamma, populacaoInicial, arqInicial, politicaPeer, politicaBloco);
@@ -101,7 +109,7 @@ int main(int argc, char *argv[])
 
             ++n;
 
-            printf ("Rodada %d\n", n);
+            if (verbose) printf ("Rodada %d\n", n);
 
             // Recupera os dados da simulação de uma rodada.
             double mediaDownload = f.mediaDownload();
@@ -148,7 +156,7 @@ int main(int argc, char *argv[])
 
             // Os resultados só valem com 30 rodadas ou mais, que é quando a distribuição t-Student
             // se aproxima o suficiente da distribuição normal.
-            bool encerra = (n >= 30);
+            bool encerra = (n >= 100);
 
             if (cenario == 1)
             {
@@ -163,8 +171,6 @@ int main(int argc, char *argv[])
                     LpN[i] = mu - 1.96 * sigma / sqrt(n);
                     UpN[i] = mu + 1.96 * sigma / sqrt(n);
                     ppN[i] = 100 * 1.96 * sigma / (mu * sqrt(n));
-
-                    printf ("\t%d: %.12f (%.12f, %.12f) %.12f\n", i, mu, LpN[i], UpN[i], ppN[i]);
                 }
             }
 
@@ -228,11 +234,14 @@ int main(int argc, char *argv[])
                 encerra = false;
             }
 
-            printf ("\tDownload:    %.12f (%.12f, %.12f) %.12f\n", tempoDownload / n, Ld, Ud, pd);
-            printf ("\tPermanencia: %.12f (%.12f, %.12f) %.12f\n", tempo / n, Lt, Ut, pt);
-            printf ("\tVazão:       %.12f (%.12f, %.12f) %.12f\n", vazao / n, Lv, Uv, pv);
-            printf ("\tPessoas:     %.12f (%.12f, %.12f) %.12f\n", pessoas / n, Ln, Un, pn);
-            printf ("\tPeers:       %.12f (%.12f, %.12f) %.12f\n", peers / n, Lp, Up, pp);
+            if (verbose)
+            {
+                printf ("\tDownload:    %.12f (%.12f, %.12f) %.12f\n", tempoDownload / n, Ld, Ud, pd);
+                printf ("\tPermanencia: %.12f (%.12f, %.12f) %.12f\n", tempo / n, Lt, Ut, pt);
+                printf ("\tVazão:       %.12f (%.12f, %.12f) %.12f\n", vazao / n, Lv, Uv, pv);
+                printf ("\tPessoas:     %.12f (%.12f, %.12f) %.12f\n", pessoas / n, Ln, Un, pn);
+                printf ("\tPeers:       %.12f (%.12f, %.12f) %.12f\n", peers / n, Lp, Up, pp);
+            }
 
             if (encerra == true) break;
         }
@@ -262,12 +271,17 @@ int main(int argc, char *argv[])
             sprintf (arqpmf, "log/cen%dlam%.1fpmf.txt", cenario, lambda);
             FILE* arq = fopen(arqpmf, "w");
 
-            for (int i = 0; i < (int) tempoPorN.size(); ++i) fprintf (arq, "%u %.12f %.12f %.12f\n", i, tempoPorN[i] / n, std::max(LpN[i], 0.0), UpN[i]);
+            double rho = lambda / U;
+
+            for (int i = 0; i < (int) tempoPorN.size(); ++i)
+            {
+                fprintf (arq, "%u %.12f %.12f %.12f %.12f\n", i, tempoPorN[i] / n, std::max(LpN[i], 0.0), UpN[i], (1-rho)*pow(rho, i));
+            }
 
             fclose(arq);
 
-            fprintf (plot, "set title \"pmf de N: Cenário %d - λ = %.1f\"\n", cenario, lambda);
-            fprintf (plot, "set output \"%s.png\"\nplot \"%s\" u 1:2:3:4 title \"pmf\" with yerrorbars lt 8 lw 2\n", arqpmf, arqpmf);
+            fprintf (plot, "set title \"pmf de N: Cenário %d - λ = %.1f\"\nset xlabel \"k\"\nset ylabel \"P(N = k)\"\n", cenario, lambda);
+            fprintf (plot, "set output \"%s.png\"\nplot \"%s\" u 1:2:3:4 title \"pmf da Simulação\" with yerrorbars lt 8 lw 2, \"%s\" u 1:5 title \"pmf Analítica\" with points lt 1 lw 2\nunset ylabel\n", arqpmf, arqpmf, arqpmf);
 
             tempoPorN.clear();
             tempoPorN2.clear();
@@ -278,7 +292,7 @@ int main(int argc, char *argv[])
 
         if (cenario == 1 || cenario == 2)
         {
-            char plotline[2048];
+            char plotline[1 << 20];
             plotline[0] = 0;
 
             for (int i = 0; i < n; ++i)
@@ -305,10 +319,28 @@ int main(int argc, char *argv[])
             temposDownload.clear();
 
             plotline[strlen(plotline) - 1] = 0;
-            
-            fprintf (plot, "set title \"CDF: tempo de download - Cenário %d - λ = %.1f\"\n", cenario, lambda);
-            fprintf (plot, "set output \"log/cen%dlam%.1fCDF.png\"\nplot %s\n", cenario, lambda, plotline);
+
+            fprintf (plot, "set title \"CDF: tempo de download - Cenário %d - λ = %.1f\"\nset xlabel \"x\"\nset ylabel \"P(D < x)\"\n", cenario, lambda);
+            fprintf (plot, "set output \"log/cen%dlam%.1fCDF.png\"\nplot %s\nunset ylabel\n", cenario, lambda, plotline);
         }
+
+        if (cenario >= 4 && cenario <= 6 && arqInicial == 0)
+        {
+            char nome[64];
+            sprintf (nome, "log/cen%db%02d%c%cVazao.txt", cenario, numBlocos, politicaPeer, politicaBloco);
+            FILE* arq = fopen(nome, "a");
+
+            reg[nome]++;
+            if (reg[nome] <= 50)
+            {
+                fprintf (arq, "%d %.12f %.12f %.12f\n", populacaoInicial, muv, Lv, Uv);
+                fprintf (plot, "set title \"Vazão média: Cenário %d - Blocos: %d - Políticas: %c (peer) & %c (bloco)\"\nset xlabel \"Pessoas no sistema\"\n", cenario, numBlocos, politicaPeer, politicaBloco);
+                fprintf (plot, "set output \"%s.png\"\nplot \"%s\" u 1:2:3:4 title \"Vazão média\" with yerrorbars lt 8 lw 2\n", nome, nome);
+            }
+
+            fclose(arq);
+        }
+
         fprintf (resultados, "\n");
     }
 

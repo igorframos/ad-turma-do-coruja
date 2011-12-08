@@ -178,6 +178,7 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
             setSeeds.erase(setSeeds.find(i->id()));
 
             seeds.erase(i);
+
             break;
         }
     }
@@ -345,33 +346,12 @@ void filaEventos::testaFimRodada()
             saidaTempoN.push_back(tempoN[i] / tTotal);
         }
         tempoN.clear();
-
-        // Variáveis para detectar o final da fase transiente. tmpi é a diferença da média desta rodada para
-        // a média da rodada anterior, de modo que uma diferença muito grande tem grandes chances de significar
-        // que ainda estamos na fase transiente.
-        double tmp1 = T / saidasComputadas - T0,
-               tmp2 = D / downloadsConcluidos - D0,
-               tmp3 = A / tTotal - A0,
-               tmp4 = V / (tAtual - tRodada) - V0,
-               tmp5 = P / tTotal - P0;
-        if (tmp1 < 0) tmp1 *= -1;
-        if (tmp2 < 0) tmp2 *= -1;
-        if (tmp3 < 0) tmp3 *= -1;
-        if (tmp4 < 0) tmp4 *= -1;
-        if (tmp5 < 0) tmp5 *= -1;
-
-        if (f != TRANSIENTE) printf ("Encerrada fase %u. Total de %u saidas (%u computadas). Tempo da rodada: %.12f\n", f, saidas, saidasComputadas, tTotal);
-        else
-        {
-            eventosFimTrans = n;
-            fimTrans = tAtual;
-        }
-        
+       
         // Limpa resultados da rodada para calcular as próximas.
         T0 = T / saidasComputadas;
         D0 = D / downloadsConcluidos;
         A0 = A / tTotal;
-        V0 = V / (tAtual - tRodada);
+        V0 = V / tTotal;
         P0 = P / tTotal;
         chegadas = 0;
         saidas = 0;
@@ -385,23 +365,42 @@ void filaEventos::testaFimRodada()
         V = 0;
         P = 0;
 
-        // Escolhe a maior das diferenças como parâmetro.
-        bool dif1 = tmp1 > EPS * T0,
-             dif2 = tmp2 > EPS * D0,
-             dif3 = tmp3 > EPS * A0,
-             dif4 = tmp4 > EPS * V0,
-             dif5 = tmp5 > EPS * P0;
-
-        double tmpVal = std::max(T0, D0);
-        tmpVal = std::max(tmpVal, A0);
-        tmpVal = std::max(tmpVal, V0);
-        tmpVal = std::max(tmpVal, P0);
 
         if (f == TRANSIENTE)
         {
+            // Variáveis para detectar o final da fase transiente. tmpi é a diferença da média desta rodada para
+            // a média da rodada anterior, de modo que uma diferença muito grande tem grandes chances de significar
+            // que ainda estamos na fase transiente.
+            double tmp1 = T1 / totalSaidas - T0,
+                   tmp2 = D1 / downloadsTotais - D0,
+                   tmp3 = A1 / tAtual - A0,
+                   tmp4 = V1 / tAtual - V0,
+                   tmp5 = P1 / tAtual - P0;
+            if (tmp1 < 0) tmp1 *= -1;
+            if (tmp2 < 0) tmp2 *= -1;
+            if (tmp3 < 0) tmp3 *= -1;
+            if (tmp4 < 0) tmp4 *= -1;
+            if (tmp5 < 0) tmp5 *= -1;
+
+            T0 = T1 / totalSaidas - T0;
+            D0 = D1 / downloadsTotais - D0;
+            A0 = A1 / tAtual - A0;
+            V0 = V1 / tAtual - V0;
+            P0 = P1 / tAtual - P0;
+
+            eventosFimTrans = n;
+            fimTrans = tAtual;
+
+            // Escolhe a maior das diferenças como parâmetro.
+            bool dif1 = tmp1 > EPS * T1 / totalSaidas,
+                 dif2 = tmp2 > EPS * D1 / downloadsTotais,
+                 dif3 = tmp3 > EPS * A1 / tAtual,
+                 dif4 = tmp4 > EPS * V1 / tAtual,
+                 dif5 = tmp5 > EPS * P1 / tAtual;
+
             tDownloads.clear();
             saidaTempoN.clear();
-            if (dif1 || dif2 || dif3 || dif4 || dif5)
+            if (dif1 || dif2 || dif3 || dif4 || dif5 || n < TAMTRANSMIN)
             {
                 return;
             }
