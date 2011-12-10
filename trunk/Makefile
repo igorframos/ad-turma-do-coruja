@@ -44,10 +44,17 @@ obj/geradorAleatorio.o: src/geradorAleatorio.cpp src/geradorAleatorio.h
 run: bin/sim
 	time ./bin/sim cenarios.txt
 
+vrun: bin/sim
+	time ./bin/sim cenarios.txt -v
+
 debug: bin/sim
 	gdb bin/sim
 
 graph: run
+	gnuplot <log/plotInfo.txt
+	rm log/*Vazao.txt
+
+vgraph: vrun
 	gnuplot <log/plotInfo.txt
 	rm log/*Vazao.txt
 

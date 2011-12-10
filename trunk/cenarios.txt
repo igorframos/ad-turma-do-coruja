@@ -638,7 +638,4 @@
 
 
 
-
-
-
 #cenário arquivo lambda mu U gamma probRecomendação populaçãoInicial políticaPeer políticaBloco

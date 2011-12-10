@@ -160,12 +160,12 @@ int main(int argc, char *argv[])
 
             if (cenario == 1)
             {
+                while (LpN.size() < tempoPorN.size()) LpN.push_back(0);
+                while (UpN.size() < tempoPorN.size()) UpN.push_back(0);
+                while (ppN.size() < tempoPorN.size()) ppN.push_back(0);
+
                 for (int i = 0; i < (int) tempoPorN.size(); ++i)
                 {
-                    while (LpN.size() < tempoPorN.size()) LpN.push_back(0);
-                    while (UpN.size() < tempoPorN.size()) UpN.push_back(0);
-                    while (ppN.size() < tempoPorN.size()) ppN.push_back(0);
-
                     double mu = tempoPorN[i] / n;
                     double sigma = sqrt((tempoPorN2[i] - 2 * mu * tempoPorN[i] + n * mu * mu) / (n - 1));
                     LpN[i] = mu - 1.96 * sigma / sqrt(n);
@@ -262,10 +262,68 @@ int main(int argc, char *argv[])
         fprintf (resultados, "Média (Pessoas): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mun, Ln, Un, pn);
         fprintf (resultados, "Média (Peers): %.12f - IC: (%.12f, %.12f) - P: %.12f\n", mup, Lp, Up, pp);
 
+        /*
+         * O trecho a seguir tem, por objetivo, verificar a coerência dos resultados impressos acima.
+         * Testaremos o resultado de Little para todo o sistema, para os peers e para os seeds.
+         * Queremos saber se os resultados encontrados estão dentro daquilo que se consideraria
+         * razoável quando comparados entre si.
+         */
+        if (cenario == 1)
+        {
+            double rho = lambda / U,
+                   analitico;
+
+            // Número de pessoas na fila.
+            analitico = rho / (1 - rho);
+            if (analitico < Ln || analitico < Lp || analitico > Un || analitico > Up) fprintf (resultados, "Número de pessoas na fila está incoerente. (%.12f %.12f) (%.12f %.12f) %.12f\n", Ln, Un, Lp, Up, analitico);
+
+            // Tempo de download e de permanência.
+            analitico = 1 / (U - lambda);
+            if (analitico < Lt || analitico < Ld || analitico > Ut || analitico > Ud) fprintf (resultados, "Tempo de download está incoerente. (%.12f %.12f) (%.12f %.12f) %.12f\n", Lt, Ut, Ld, Ud, analitico);
+
+            // Vazão.
+            if (lambda < Lv || lambda > Uv) fprintf (resultados, "Vazão está incoerente. %.12f %.12f %.1f\n", Lv, Uv, lambda);
+           
+            // pmf não está sendo testada.
+
+        }
+        else if (cenario >= 4 && cenario <= 6)
+        {
+            double l, u;    // Comparamos sempre o intervalo de confiança.
+
+            // Tempo de download em relação ao tempo de permanência.
+            l = Ld + 1 / gamma;
+            u = Ud + 1 / gamma;
+            if (l > Ut || u < Lt) fprintf (resultados, "Tempo de download incoerente com tempo de permanência.\n");
+            l = Lt - 1 / gamma;
+            u = Ut - 1 / gamma;
+            if (l > Ud || u < Ld) fprintf (resultados, "Tempo de download incoerente com tempo de permanência.\n");
+
+            // Número de peers, número de pessoas e vazão.
+            l = Lp + Lv * 1 / gamma;
+            u = Up + Uv * 1 / gamma;
+            if (populacaoInicial < l || populacaoInicial > u) fprintf (resultados, "Número de peers, número de pessoas e vazão estão incoerentes. %.12f %.12f %d\n", l, u, populacaoInicial);
+
+            // Little para pessoas
+            l = Lt * Lv;
+            u = Ut * Uv;
+            if (mun < l || mun > u) fprintf (resultados, "Little para número de pessoas e tempo de permanência está incoerente.\n");
+
+            // Little para peers
+            l = Ld * Lv;
+            u = Ud * Uv;
+            if (Up < l || Lp > u) fprintf (resultados, "Little para número de peers e tempo de download está incoerente.\n");
+
+            // Little para seeds
+            l = 1 / gamma * Lv;
+            u = 1 / gamma * Uv;
+            if (Un - Lp < l || Ln - Up > u) fprintf (resultados, "Little para número de seeds está incoerente.\n");
+        }
+        // Fim do trecho de testes.
+
         if (cenario == 1)
         {
             fprintf (resultados, "pmf do Número total de usuários no sistema:\n");
-            for (int i = 0; i < (int) tempoPorN.size(); ++i) fprintf (resultados, "\t%u: %.12f - IC: (%.12f, %.12f) %.12f\n", i, tempoPorN[i] / n, LpN[i], UpN[i], ppN[i]);
 
             char arqpmf[64];
             sprintf (arqpmf, "log/cen%dlam%.1fpmf.txt", cenario, lambda);
@@ -276,6 +334,7 @@ int main(int argc, char *argv[])
             for (int i = 0; i < (int) tempoPorN.size(); ++i)
             {
                 fprintf (arq, "%u %.12f %.12f %.12f %.12f\n", i, tempoPorN[i] / n, std::max(LpN[i], 0.0), UpN[i], (1-rho)*pow(rho, i));
+                fprintf (resultados, "\t%u: %.12f - IC: (%.12f, %.12f) %.12f - analítico: %.12f\n", i, tempoPorN[i] / n, LpN[i], UpN[i], ppN[i], (1-rho)*pow(rho, i));
             }
 
             fclose(arq);
