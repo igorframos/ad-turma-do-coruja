@@ -176,6 +176,7 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
             ++totalSaidas;
 
             setSeeds.erase(setSeeds.find(i->id()));
+            sairam.insert(i->id());
 
             seeds.erase(i);
 
@@ -203,6 +204,7 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
 
         peers.push_back(pessoa(pessoa::PEER, f, tAtual));
         setPeers.insert(peers.back().id());
+        agendaTransmissao(tAtual, peers.back());
 
         testaFimRodada();   // Como é uma chegada, pode ter encerrado a rodada.
     }

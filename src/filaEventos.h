@@ -102,10 +102,13 @@ class filaEventos
         const static unsigned int TRANSIENTE = 0;       // Código da fase transiente.
         const static unsigned int DELTA = 500;          // Número de chegadas até um teste do fim da fase transiente.
         const static unsigned int TAMTRANSMIN = 5000;   // Tamanho mínimo da fase transiente.
-        const static unsigned int TAMRODADA = 12500;    // Número de chegadas em uma rodada.
+        const static unsigned int TAMRODADA = 10000;    // Número de chegadas em uma rodada.
         const static double EPS = 0.025;                // Diferença máxima entre duas médias para considerarmos a fase transiente terminada.
 
         enum politicas{RANDOM_PEER, RANDOM_PIECE, RAREST_FIRST};
+
+
+        std::set<int> sairam;   // Debug.
 };
 
 #endif
