@@ -59,8 +59,7 @@ vgraph: vrun
 	rm log/*Vazao.txt
 
 relatorio: Relatório/relatorio.tex
-	pdflatex Relatório/relatorio.tex
-	pdflatex Relatório/relatorio.tex
+	cd Relatório && pdflatex relatorio.tex && pdflatex relatorio.tex && cd ..
 
 clean:
 	rm obj/*.o bin/sim log/* Relatório/relatorio.aux Relatório/relatorio.pdf
