@@ -266,11 +266,29 @@ Mesmo com casos como os dois últimos, o resultado final não foi insatisfatóri
 \clearpage
 \pagebreak
 
-\subsection{Rodadas} %Número e tamanho das rodadas
+\subsection{Rodadas}
+
+Para que os intervalos de confiança sejam pequenos, é preciso que cada rodada tenha um bom tamanho e que o número total de rodadas seja suficientemente grande. Inicialmente, fixamos esses números em 30 rodadas com 5000 chegadas cada, mas alguns intervalos ainda estavam grandes demais e decidimos passar a 100 rodadas.
+
+Posteriormente, aumentamos o tamanho de cada rodada para 10000 chegadas quando buscávamos o motivo de um determinado resultado não seguir padrão que esperávamos. Mesmo tendo resolvido esta questão de outra forma, optamos por manter, no final, um total de 100 rodadas com 10000 chegadas cada.
 
 \pagebreak
 
 \section{Testes de Corretude}\label{TestesDeCorretude}
+
+Para testar nossa implementação, comparamos a saída do simulador com resultados que poderíamos obter analiticamente. Desta forma, fomos capazes de concluir quando o programa estava muito próximo de estar correto.
+
+O cenário 1 proposto na descrição do trabalho representa exatamente uma M/M/1, visto que temos o arquivo com apenas um bloco, chegadas de peers seguindo um processo Poisson e a ausência total de seeds ou chegadas por recomendação. Dado que a disciplina de atendimento não afeta a média das variáveis observadas, podemos calcular analiticamente todos os resultados e compará-los com a saída da simulação. Com isso, pudemos executar o ajuste inicial do programa.
+
+\subsection{Dificuldades enfrentadas}
+
+Apesar de os testes com o cenário 1 terem eliminado a maior parte de nossas dúvidas, tivemos um grande problema já no final do desenvolvimento. Ao executar as simulações, percebemos que as vazões dos cenários 4 a 6 não se comportavam exatamente como esperado.
+
+Esta falha nos tomou vários dias para ser resolvida. Uma das causas foi não sabermos como calcular analiticamente o resultado esperado para nos certificarmos de que, de fato, havia algo errado.
+
+Outra causa foi o efeito do erro nos resultados. O problema no código fazia com que simplesmente simulássemos um cenário diferente daquele que esperávamos. Com isso, tínhamos o resultado de Little valendo para todas as variáveis e isso fez com que, novamente, ficássemos em dúvida se havia mesmo algum erro.
+
+Terminamos por descobrir que, quando um peer chegava por recomendação, ele não transmitia nenhum dado. Desta forma, simulávamos um cenário em que um peer chegava, só recebia o arquivo do publisher e poderia ou não ficar um tempo no sistema sem fazer nada de fato. Uma vez corrigido o problema, obtivemos os dados apresentados nas próximas seções deste relatório.
 
 \pagebreak
 
