@@ -58,6 +58,10 @@ vgraph: vrun
 	gnuplot <log/plotInfo.txt
 	rm log/*Vazao.txt
 
+relatorio: Relatório/relatorio.tex
+	pdflatex Relatório/relatorio.tex
+	pdflatex Relatório/relatorio.tex
+
 clean:
-	rm obj/*.o bin/sim log/*
+	rm obj/*.o bin/sim log/* Relatório/relatorio.aux Relatório/relatorio.pdf
 
