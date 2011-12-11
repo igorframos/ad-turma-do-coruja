@@ -176,7 +176,6 @@ void filaEventos::trataSaidaSeed(const eventoSaidaSeed& e)
             ++totalSaidas;
 
             setSeeds.erase(setSeeds.find(i->id()));
-            sairam.insert(i->id());
 
             seeds.erase(i);
 
