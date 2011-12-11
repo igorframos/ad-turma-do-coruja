@@ -1,0 +1,177 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage{graphicx}
+
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese,brazil]{babel}
+\usepackage[T1]{fontenc}
+
+\usepackage{indentfirst}
+\usepackage{url}
+
+\usepackage{float}
+\floatstyle{boxed}
+\restylefloat{figure}
+
+\begin{document}
+
+
+\begin{titlepage}
+
+\begin{minipage}{0.2\linewidth}
+ \includegraphics[]{./minerva.png}
+\end{minipage}
+\begin{minipage}{0.8\linewidth}
+ \textbf{Universidade Federal do Rio de Janeiro}\\
+ Instituto de Matemática\\
+ Departamento de Ciência da Computação\\
+ \rule{0.8\linewidth}{0.5mm}\\
+ Rio de Janeiro, RJ - Brasil
+\end{minipage}
+
+\begin{center}
+
+\vspace{2cm}
+
+\Large
+Trabalho de Simulação: Implementação e análise de um simulador.
+
+\vspace{1cm}
+
+\large
+
+Gabriel Pires da Silva
+
+\vspace{0.5cm}
+
+Igor da Fonseca Ramos
+
+\vspace{0.5cm}
+
+Renan da Costa Garrot
+
+\vspace{2.5cm}
+
+\today
+
+\normalsize
+\end{center}
+
+\vfill
+
+\begin{flushright}
+\begin{tabular}{rl}
+Disciplina: & Avaliação e Desempenho 2011/2\\
+Professores: & Daniel Sadoc Menasché\\
+ & Paulo Henrique de Aguiar Rodrigues\\
+\end{tabular}
+\end{flushright}
+
+\vspace{2cm}
+
+\end{titlepage}
+
+\pagebreak
+
+\tableofcontents
+\pagebreak
+
+\listoffigures
+\pagebreak
+
+\section{Introdução}
+
+A tarefa que nos foi atribuída consistia em implementar um simulador de um sistema \textit{peer-to-peer} com o objetivo de comparar os cenários apresentados e de acrescentar nossas observações sobre a escalabilidade dos mesmos.
+
+A modelagem foi dada na descrição do trabalho e trata-se de uma simplificação de um sistema real. Estão presentes na simulação o \textit{publisher}, o qual é responsável por enviar o arquivo; os \textit{peers}, que desejam efetuar o download; e os \textit{seeds}, que são usuários comuns que já receberam todos os dados, mas continuam presentes para ajudar na distribuição. 
+
+Ao longo da implementação, enfrentamos algumas dificuldades, mas cremos que o resultado final foi satisfatório. Este relatório tem por finalidade apresentar uma breve descrição do simulador implementado, a teoria por trás do que foi executado e os resultados finais obtidos.
+
+\pagebreak
+
+\section{Implementação do Simulador}
+
+\subsection{Linguagem de programação e plataforma}
+
+O simulador foi implementado na linguagem C++. Esta escolha foi baseada em três fatores. O primeiro diz respeito à eficiência, pois o programa faz uso intensivo da CPU e, portanto, uma linguagem compilada para \textit{assembly} torna a execução muito mais rápida. O segundo foi a possibilidade de se programar utilizando orientação a objetos, o que foi fundamental para a forma como o código foi dividido, facilitando o entendimento e simplificando a modelagem. Por último, temos a familiaridade dos três integrantes do grupo com a programação em C++, o que permitiu que todos estivessem engajados no trabalho desde seu princípio sem que fosse necessário despender tempo aprendendo uma nova linguagem.
+
+O compilador utilizado foi o GCC 4.6, encontrado na maioria das distribuições mais atualizadas de Linux e de fácil acesso para download. A plataforma em que foram executados todos os testes foi o Ubuntu 11.10, embora o sistema possa ser compilado para qualquer sistema operacional para o qual haja uma versão do GCC.
+
+\subsection{Funcionamento geral}
+
+O simulador pode ser utilizado a partir do executável chamado ``\textit{sim}'', criado dentro da pasta \textit{bin} pelo \textit{Makefile}. Deve ser passado como parâmetro um arquivo de entrada contendo as informações sobre os cenários a serem simulados.
+
+Alternativamente, pode-se usar o comando já preparado no \textit{Makefile} através da linha ``\textit{make run}''. Para isso, basta alterar o arquivo ``\textit{cenarios.txt}'', presente na pasta raiz do projeto, incluindo ou removendo configurações a serem testadas.
+
+É possível, ainda, com o auxílio do programa ``\textit{gnuplot}'', gerar diversos gráficos, dentre os quais os que encontram-se neste relatório, através do comando ``\textit{make graph}''.
+
+No modo verborrágico, são impressas informações extras sobre as variáveis da simulação no console. Para utilizá-lo, basta adicionar ``\textit{-v}'' após o nome do arquivo de entrada ou utilizar os comandos ``\textit{make vrun}'' e ``\textit{make vgraph}''.
+
+Todos os dados resultantes das simulações podem ser encontrados no arquivo ``\textit{resultados.txt}'', na raiz do projeto, e no conteúdo da pasta \textit{log}.
+
+\subsection{Modelagem do sistema}
+
+A utilização da orientação a objetos teve como finalidade organizar o programa em classes que representassem entidades do simulador. Ao todo, foram criadas sete classes. São elas:
+
+\begin{itemize}
+	\item \textbf{evento:} Representa todos os tipos de acontecimento que podem ocorrer e é utilizada para formar a fila de eventos a serem tratados. Guardam o tempo em que acontecerão e o seu tipo.
+	\item \textbf{eventoChegadaPeer:} Herda de evento e representa apenas uma chegada de peer. Não há nenhuma informação adicional com relação à classe pai evento, servindo apenas como especificação de tipo.
+	\item \textbf{eventoSaidaSeed:} Herda de evento e representa apenas a saída de um seed. Guarda, além das informações presentes em evento, guarda qual seed irá sair.
+	\item \textbf{eventoTransmissão:} Herda de evento e representa apenas as transmissões. Além das informações presentes em evento, guarda quem irá tentar enviar um bloco.
+	\item \textbf{pessoa:} Representa todos os tipos de pessoa que podem estar presentes no sistema. Guarda uma identificação, o tipo (\textit{publisher}, \textit{peer} ou \textit{seed}) e todas as informações sobre o estado dos blocos e a cor.
+	\item \textbf{geradorAleatorio:} Responsável por gerar números pseudoaleatórios para serem usados na simulação. Pode gerar valores de uma distribuição uniforme ou de uma distribuição exponencial.
+	\item \textbf{simulador:} Responsável por executar a simulação de fato. Cada instância é responsável por executar a simulação sobre um conjunto de parâmetros.
+\end{itemize}
+
+A coleta dos dados é feita na função principal do programa e em alguns trechos específicos da simulação.
+
+\subsection{Fila de eventos}
+
+Para a implementação da fila de eventos foi utilizada uma heap de mínimo. Com isso, obtemos tempo de inserção de um novo evento $O(log\,n)$ e tempo de consulta ao próximo evento $O(1)$.
+
+\subsection{Geração de variáveis aleatórias}
+
+São utilizadas variáveis aleatórias de distribuição uniforme e exponencial para a simulação. O gerador de variáveis aleatórias recebe uma semente ou utiliza o número 1 como padrão.
+
+Quando é requisitado um número aleatório com distribuição de probabilidade uniforme, multiplica-se o último resultado dado por 1000003 e calcula-se o resultado módulo 1073741789 - que é um número primo. Este resíduo é retornado como um valor pseudoaleatório.
+
+Caso se deseje obter um valor aleatório com distribuição de probabilidade exponencial de média $1 / \mu$, utiliza-se um número pseudoaleatório com distribuição de probabilidade uniforme e calcula-se a inversa da CDF da distribuição exponencial para este valor. O resultado da aplicação desta função é retornado como um valor pseudoaleatório.
+
+\section{Simulações}
+
+
+
+\end{document}
+
+
+\begin{figure}
+	\caption{Variância da V.A. $W_2$, Serviço LCFS com $\lambda$ = 0.40}
+	\label{figTransienteLCFSfila2VarWLambda040}
+	\includegraphics[scale = 0.20]{./graficos_transiente_2/08.png}
+\end{figure}
+
+
+\begin{centering}
+\begin{table}[htp]
+\makebox[\textwidth] 
+{
+\begin{tabular} { | c | c | c | c | c | r | }
+    \hline
+    Filas & $\lambda$  & Fase transiente  & Número de rodadas & Tamanho das rodadas  & FATOR \\ \hline
+    FCFS     & $0.1$   & 10000 & 490     & 720      & 362800       \\ \hline
+    FCFS     & $0.2$   & 10000 & 640     & 770      & 502800       \\ \hline
+    FCFS     & $0.3$   & 10000 & 950     & 940      & 903000       \\ \hline
+    FCFS     & $0.4$   & 10000 & 640     & 4100    & 2634000     \\ \hline
+    FCFS     & $0.45$ & 50000 & 1110   & 8360    & 9329600     \\ \hline
+    LCFS     & $0.1$   & 10000 & 320     & 1240    & 406800       \\ \hline
+    LCFS     & $0.2$   & 10000 & 640     & 960      & 624400       \\ \hline
+    LCFS     & $0.3$   & 10000 & 950     & 1260    & 1207000     \\ \hline
+    LCFS     & $0.4$   & 10000 & 640     & 7300    & 4682000     \\ \hline
+    LCFS     & $0.45$ & 50000 & 950     & 18700  & 17815000   \\ \hline
+\end{tabular}
+}
+\caption{Fator Mínimo para cada simulação}
+\label{TabelaFinal}
+\end{table}
+\end{centering}
+
+
