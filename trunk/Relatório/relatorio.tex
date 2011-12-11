@@ -5,6 +5,8 @@
 \usepackage[portuguese,brazil]{babel}
 \usepackage[T1]{fontenc}
 
+\usepackage{amsmath}
+
 \usepackage{indentfirst}
 \usepackage{url}
 
@@ -92,7 +94,7 @@ Ao longo da implementação, enfrentamos algumas dificuldades, mas cremos que o 
 
 \subsection{Linguagem de programação e plataforma}
 
-O simulador foi implementado na linguagem C++. Esta escolha foi baseada em três fatores. O primeiro diz respeito à eficiência, pois o programa faz uso intensivo da CPU e, portanto, uma linguagem compilada para \textit{assembly} torna a execução muito mais rápida. O segundo foi a possibilidade de se programar utilizando orientação a objetos, o que foi fundamental para a forma como o código foi dividido, facilitando o entendimento e simplificando a modelagem. Por último, temos a familiaridade dos três integrantes do grupo com a programação em C++, o que permitiu que todos estivessem engajados no trabalho desde seu princípio sem que fosse necessário despender tempo aprendendo uma nova linguagem.
+O simulador foi implementado na linguagem C++. Esta escolha foi baseada em três fatores. O primeiro diz respeito à eficiência, pois o programa faz uso intenso da CPU e, portanto, uma linguagem compilada para \textit{assembly} torna a execução muito mais rápida. O segundo foi a possibilidade de se programar utilizando orientação a objetos, o que foi fundamental para a forma como o código foi dividido, facilitando o entendimento e simplificando a modelagem. Por último, temos a familiaridade dos três integrantes do grupo com a programação em C++, o que permitiu que todos estivessem engajados no trabalho desde seu princípio sem que fosse necessário despender tempo aprendendo uma nova linguagem.
 
 O compilador utilizado foi o GCC 4.6, encontrado na maioria das distribuições mais atualizadas de Linux e de fácil acesso para download. A plataforma em que foram executados todos os testes foi o Ubuntu 11.10, embora o sistema possa ser compilado para qualquer sistema operacional para o qual haja uma versão do GCC.
 
@@ -115,7 +117,7 @@ A utilização da orientação a objetos teve como finalidade organizar o progra
 \begin{itemize}
 	\item \textbf{evento:} Representa todos os tipos de acontecimento que podem ocorrer e é utilizada para formar a fila de eventos a serem tratados. Guardam o tempo em que acontecerão e o seu tipo.
 	\item \textbf{eventoChegadaPeer:} Herda de evento e representa apenas uma chegada de peer. Não há nenhuma informação adicional com relação à classe pai evento, servindo apenas como especificação de tipo.
-	\item \textbf{eventoSaidaSeed:} Herda de evento e representa apenas a saída de um seed. Guarda, além das informações presentes em evento, guarda qual seed irá sair.
+	\item \textbf{eventoSaidaSeed:} Herda de evento e representa apenas a saída de um seed. Guarda, além das informações presentes em evento, qual seed irá sair.
 	\item \textbf{eventoTransmissão:} Herda de evento e representa apenas as transmissões. Além das informações presentes em evento, guarda quem irá tentar enviar um bloco.
 	\item \textbf{pessoa:} Representa todos os tipos de pessoa que podem estar presentes no sistema. Guarda uma identificação, o tipo (\textit{publisher}, \textit{peer} ou \textit{seed}) e todas as informações sobre o estado dos blocos e a cor.
 	\item \textbf{geradorAleatorio:} Responsável por gerar números pseudoaleatórios para serem usados na simulação. Pode gerar valores de uma distribuição uniforme ou de uma distribuição exponencial.
@@ -140,7 +142,29 @@ Caso se deseje obter um valor aleatório com distribuição de probabilidade exp
 
 \section{Simulações}
 
+\subsection{Variáveis observadas}
+
+Foram observadas as seguintes variáveis aleatórias ao longo da simulação:
+\begin{itemize}
+	\item \textbf{\textit{T}} $\overset{\underset{\mathrm{\Delta}}{}}{=}$ Tempo de permanência de um indivíduo no sistema.
+	\item \textbf{\textit{D}} $\overset{\underset{\mathrm{\Delta}}{}}{=}$ Tempo de download do arquivo.
+	\item \textbf{\textit{V}} $\overset{\underset{\mathrm{\Delta}}{}}{=}$ Vazão do sistema.
+	\item \textbf{\textit{N}} $\overset{\underset{\mathrm{\Delta}}{}}{=}$ Número de pessoas presentes no sistema em um dado momento.
+	\item \textbf{\textit{P}} $\overset{\underset{\mathrm{\Delta}}{}}{=}$ Número de \textit{peers} presentes no sistema em um dado momento.
+	\item \textbf{\textit{S}} $\overset{\underset{\mathrm{\Delta}}{}}{=}$ Número de \textit{seeds} presentes no sistema em um dado momento.
+\end{itemize}
+
+É possível observar que algumas das variáveis observadas são redundantes, pois podem ser obtidas a partir de outras. Podemos, por exemplo, obter a média de $T$ a partir da média de $N$ utilizando o resultado de Little. O principal motivo que nos levou a escolher monitorar todas estas variáveis, mesmo sem aparente necessidade, foi a ajuda que isso nos proporcionou nos testes de corretude, como deixaremos mais claro na seção \ref{TestesDeCorretude}.
+
 \subsection{Método} %Batch
+
+Para cada conjunto de parâmetros foi utilizada uma simulação diferente utilizando o método \textit{batch}, ou seja, execuções em sequência de modo que os indivíduos remanescentes de uma rodada servem como condição inicial para a rodada seguinte. Como é requisito deste método, a cada peer que chegava era atribuída uma cor de modo que era possível considerar seus dados apenas no momento adequado.
+
+Caso, por exemplo, um indivíduo receba a cor vermelha correspondente à rodada 2 da simulação e sua saída ocorra ainda nesta rodada, seu tempo de permanência influenciará a média da variável $T$, seu tempo de download será icluído na média da variável $D$, sua presença contará para as médias de $N$, $P$ e $S$ e sua saída afetará a variável $V$.
+
+Por outro lado, caso este mesmo indivíduo termine o download ainda na segunda rodada, mas permaneça como \textit{seed} posteriormente, seu tempo de permanência não será utilizado em nenhum cálculo. Da mesma forma, sua saída não alterará nehuma vazão, embora sua presença ainda influencie as váriáveis $N$ e $S$ das rodadas seguintes.
+
+Ainda, se ele sequer terminar o download antes do fim da rodada 2, ele influenciará $N$, $P$ e $S$ das rodadas seguintes, mas seu tempo de download e seu tempo de permanência serão descartados. Sua saída também não será contada para nenhuma vazão.
 
 \subsection{Fase transiente} %Detecção do fim, principalmente
 
@@ -148,9 +172,15 @@ Caso se deseje obter um valor aleatório com distribuição de probabilidade exp
 
 \pagebreak
 
+\section{Testes de Corretude}\label{TestesDeCorretude}
+
+\pagebreak
+
 \section{Coleta dos dados}
 
 \subsection{Cálculo dos estimadores} %Incremental
+
+\subsection{Dados obtidos} %Apresentação dos requisitos do trabalho aqui
 
 \pagebreak
 
