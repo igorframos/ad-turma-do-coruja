@@ -335,6 +335,7 @@ int main(int argc, char *argv[])
             {
                 fprintf (arq, "%u %.12f %.12f %.12f %.12f\n", i, tempoPorN[i] / n, std::max(LpN[i], 0.0), UpN[i], (1-rho)*pow(rho, i));
                 fprintf (resultados, "\t%u: %.12f - IC: (%.12f, %.12f) %.12f - analítico: %.12f\n", i, tempoPorN[i] / n, LpN[i], UpN[i], ppN[i], (1-rho)*pow(rho, i));
+                if ((1-rho)*pow(rho, i) < LpN[i] || (1-rho)*pow(rho, i) > UpN[i]) printf ("pmf incoerente para %d\n", i);
             }
 
             fclose(arq);
