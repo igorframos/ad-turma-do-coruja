@@ -5,6 +5,8 @@
 \usepackage[portuguese,brazil]{babel}
 \usepackage[T1]{fontenc}
 
+\usepackage{algorithm}
+\usepackage[noend]{algorithmic}
 \usepackage{amsmath}
 
 \usepackage{indentfirst}
@@ -13,6 +15,31 @@
 \usepackage{float}
 \floatstyle{boxed}
 \restylefloat{figure}
+
+\renewcommand{\algorithmicrequire}{\textbf{Exija:}}
+\renewcommand{\algorithmicensure}{\textbf{Garanta:}}
+\renewcommand{\algorithmicend}{\textbf{fim}}
+\renewcommand{\algorithmicif}{\textbf{Se}}
+\renewcommand{\algorithmicthen}{\textbf{então}}
+\renewcommand{\algorithmicelse}{\textbf{Senão}}
+\renewcommand{\algorithmicelsif}{\algorithmicelse \textbf{, se}}
+\renewcommand{\algorithmicendif}{\algorithmicend\ \algorithmicif}
+\renewcommand{\algorithmicfor}{\textbf{Para}}
+\renewcommand{\algorithmicforall}{\textbf{Para todo}}
+\renewcommand{\algorithmicdo}{\textbf{faça}}
+\renewcommand{\algorithmicendfor}{\algorithmicend\ \algorithmicfor}
+\renewcommand{\algorithmicwhile}{\textbf{Enquanto}}
+\renewcommand{\algorithmicendwhile}{\algorithmicend\ \algorithmicwhile}
+\renewcommand{\algorithmicloop}{\textbf{Loop}}
+\renewcommand{\algorithmicendloop}{\algorithmicend\ \algorithmicloop}
+\renewcommand{\algorithmicrepeat}{\textbf{Repita}}
+\renewcommand{\algorithmicuntil}{\textbf{até}}
+\renewcommand{\algorithmicprint}{\textbf{Imprima}}
+\renewcommand{\algorithmicreturn}{\textbf{Retorne}}
+\renewcommand{\algorithmictrue}{\textbf{Verdadeiro}}
+\renewcommand{\algorithmicfalse}{\textbf{Falso}}
+\renewcommand{\algorithmiccomment}[1]{\hspace*{2em}// \textit{#1}}
+\floatname{algorithm}{Algoritmo}
 
 \begin{document}
 
@@ -156,7 +183,7 @@ Foram observadas as seguintes variáveis aleatórias ao longo da simulação:
 
 É possível observar que algumas das variáveis observadas são redundantes, pois podem ser obtidas a partir de outras. Podemos, por exemplo, obter a média de $T$ a partir da média de $N$ utilizando o resultado de Little. O principal motivo que nos levou a escolher monitorar todas estas variáveis, mesmo sem aparente necessidade, foi a ajuda que isso nos proporcionou nos testes de corretude, como deixaremos mais claro na seção \ref{TestesDeCorretude}.
 
-\subsection{Método} %Batch
+\subsection{Método}
 
 Para cada conjunto de parâmetros foi utilizada uma simulação diferente utilizando o método \textit{batch}, ou seja, execuções em sequência de modo que os indivíduos remanescentes de uma rodada servem como condição inicial para a rodada seguinte. Como é requisito deste método, a cada peer que chegava era atribuída uma cor de modo que era possível considerar seus dados apenas no momento adequado.
 
@@ -168,6 +195,77 @@ Ainda, se ele sequer terminar o download antes do fim da rodada 2, ele influenci
 
 \subsection{Fase transiente} %Detecção do fim, principalmente
 
+A fase transiente é o período em que o sistema ainda não está em equilíbrio, de forma que os resultados obtidos ao longo dela não são confiáveis e tendem a aumentar a variância e, com isso, aumentar o intervalo de confiança. Nosso objetivo é, portanto, tentar encontrar o seu fim para que possamos desconsiderá-la em nossos resultados.
+
+Determinar o final da fase transiente é uma tarefa que depende de heurísticas, ou seja, não há nenhum método que nos forneça um resultado exato. Tentamos, então, determinar uma heurística que nos desse uma boa aproximação e nossa opção foi dada pelo seguinte algoritmo:
+
+\begin{algorithm}[H]
+	\caption{Heurística para detecção do final da fase transiente}
+	\label{algoritmoFaseTransiente}
+	\begin{algorithmic}
+		\STATE Faça $X0 = 0$
+		\STATE Faça $\Delta = 500$
+		\STATE Faça $k = 5000$
+		\STATE Faça $p = 0,025$
+		\STATE Seja $c$ o número de chegadas até o momento
+		\FOR{cada chegada}
+			\IF{$c < k$}
+				\STATE Ignore
+			\ELSIF{$c - k$ é múltiplo de $\Delta$}
+				\STATE Seja $X1$ a média da variável $X$
+				\IF{$X1 - X0 < p * X1$}
+					\STATE Encerre a fase transiente
+				\ELSE
+					\STATE $X0 \leftarrow X1$
+				\ENDIF
+			\ENDIF
+		\ENDFOR
+	\end{algorithmic}
+\end{algorithm}
+
+Os valores de $c$, $k$ e $p$ foram determinados expermientalmente através de diversos testes. Optamos, no final, por aqueles que proporcionaram bons resultados sem estender demais a fase transiente, pois deixá-la muito longa significa aumentar o tempo de execução do programa sem a contrapartida de resultados melhores.
+
+Podemos observar o comportamento de algumas variáveis através dos gráficos nas figuras \ref{grafTransienteCen4b02n12rf} e \ref{grafTransienteCen6b10n40rr}. Nestes casos o final da fase transiente foi detectado de maneira satisfatória.
+
+Na figura \ref{grafTransienteCen4b02n12rf}, a fase transiente foi concluída com 13500 chegadas. Podemos observar que isto ocorre no momento aproximado em que as curvas que representam o número médio de \textit{peers} no sistema e a média da vazão tornam-se estáveis.
+
+De forma semelhante, na figura \ref{grafTransienteCen6b10n40rr} temos os tempos de download e de permanência aproximando-se de uma estabilidade em um momento próximo das 11500 chegadas, quando a heurística determinou como final da fase transiente.
+
+Apesar do sucesso nestes dois casos, podemos observar nas figuras \ref{grafTransienteCen5b10n43rr} e \ref{grafTransienteCen1lamb0.9} que houve algumas situações em que a fase transiente poderia ter sido estendida, pois ainda havia grande variação nas médias. Na primeira, o fim da fase transiente terminou, para o simulador, após 7500 chegadas e, na segunda, após 49500. Em ambos os casos, podemos notar que se tratava de um período de aparente estabilidade da média, seguido por novas variações acentuadas.
+
+Mesmo com casos como os dois últimos, o resultado final não foi insatisfatório, como discutiremos na seção \ref{ColetaDosDados}, e tornar a heurística mais restritiva não apresentou melhora visível. Desta forma, optamos por fixar os valores de $k$, $c$ e $\Delta$ naqueles exibidos no algoritmo \ref{algoritmoFaseTransiente}.
+
+\pagebreak
+
+\begin{figure}
+	\caption{Cenário 4 com 12 pessoas e política \textit{rarest piece first} para os blocos}
+	\label{grafTransienteCen4b02n12rf}
+	\includegraphics[scale = 0.33]{./graficos/faseTransiente/01.png}
+\end{figure}
+
+\begin{figure}
+	\caption{Cenário 6 com 10 blocos e 40 pessoas}
+	\label{grafTransienteCen6b10n40rr}
+	\includegraphics[scale = 0.33]{./graficos/faseTransiente/02.png}
+\end{figure}
+
+\clearpage
+
+\begin{figure}
+	\caption{Cenário 5 com 10 blocos e 43 pessoas}
+	\label{grafTransienteCen5b10n43rr}
+	\includegraphics[scale = 0.33]{./graficos/faseTransiente/03.png}
+\end{figure}
+
+\begin{figure}
+	\caption{Cenário 1 com $\lambda$ valendo 0,9}
+	\label{grafTransienteCen1lamb0.9}
+	\includegraphics[scale = 0.33]{./graficos/faseTransiente/04.png}
+\end{figure}
+
+\clearpage
+\pagebreak
+
 \subsection{Rodadas} %Número e tamanho das rodadas
 
 \pagebreak
@@ -176,9 +274,9 @@ Ainda, se ele sequer terminar o download antes do fim da rodada 2, ele influenci
 
 \pagebreak
 
-\section{Coleta dos dados}
+\section{Coleta dos dados}\label{ColetaDosDados}
 
-\subsection{Cálculo dos estimadores} %Incremental
+\subsection{Cálculo de estimadores e intervalos de confiança} %Incremental
 
 \subsection{Dados obtidos} %Apresentação dos requisitos do trabalho aqui
 
@@ -231,3 +329,11 @@ Ainda, se ele sequer terminar o download antes do fim da rodada 2, ele influenci
 \end{centering}
 
 
+
+
+
+\begin{figure}
+	\caption{Variância da V.A. $W_2$, Serviço LCFS com $\lambda$ = 0.40}
+	\label{figTransienteLCFSfila2VarWLambda040}
+	\includegraphics[scale = 0.20]{./graficos_transiente_2/08.png}
+\end{figure}
