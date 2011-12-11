@@ -106,9 +106,6 @@ class filaEventos
         const static double EPS = 0.025;                // Diferença máxima entre duas médias para considerarmos a fase transiente terminada.
 
         enum politicas{RANDOM_PEER, RANDOM_PIECE, RAREST_FIRST};
-
-
-        std::set<int> sairam;   // Debug.
 };
 
 #endif
