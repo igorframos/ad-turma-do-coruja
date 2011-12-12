@@ -49,6 +49,9 @@ int main(int argc, char *argv[])
         ba = fscanf (cenarios, " %c %c %u", &politicaPeer, &politicaBloco, &arqInicial); ++ba;
 
         if (politicaPeer == 'r') pPeer = filaEventos::RANDOM_PEER;
+        else if (politicaPeer == 'o') pPeer = filaEventos::OLDEST_PEER;
+        else if (politicaPeer == 'n') pPeer = filaEventos::NEWEST_PEER;
+        else if (politicaPeer == 'm') pPeer = filaEventos::NEWNEWEST_PEER;
         if (politicaBloco == 'r') pBloco = filaEventos::RANDOM_PIECE;
         else pBloco = filaEventos::RAREST_FIRST;
 
@@ -407,11 +410,6 @@ int main(int argc, char *argv[])
 
     fclose(resultados);
     fclose(plot);
-    
-    char teste[1024];
-    sprintf (teste, "cp log/cen3b01rrVazao.txt vazao3%d.txt", time(NULL));
-
-    system(teste);
 
     return 0;
 }

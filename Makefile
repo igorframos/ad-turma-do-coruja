@@ -62,5 +62,5 @@ relatorio: Relatório/relatorio.tex
 	cd Relatório && pdflatex relatorio.tex && pdflatex relatorio.tex && cd ..
 
 clean:
-	rm obj/*.o bin/sim log/* Relatório/relatorio.aux Relatório/relatorio.pdf
+	rm obj/*.o bin/sim log/* Relatório/relatorio.aux Relatório/relatorio.pdf Relatório/relatorio.lof Relatório/relatorio.log Relatório/relatorio.lot Relatório/relatorio.synctex.gz Relatório/relatorio.toc
 

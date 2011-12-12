@@ -105,7 +105,7 @@ class filaEventos
         const static unsigned int TAMRODADA = 10000;    // Número de chegadas em uma rodada.
         const static double EPS = 0.025;                // Diferença máxima entre duas médias para considerarmos a fase transiente terminada.
 
-        enum politicas{RANDOM_PEER, RANDOM_PIECE, RAREST_FIRST};
+        enum politicas{RANDOM_PEER, OLDEST_PEER, NEWEST_PEER, NEWNEWEST_PEER, RANDOM_PIECE, RAREST_FIRST};
 };
 
 #endif

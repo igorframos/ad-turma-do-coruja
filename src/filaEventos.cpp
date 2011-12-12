@@ -280,6 +280,33 @@ std::list<pessoa>::iterator filaEventos::escolhePeer(const pessoa& origem)
     {
         p = g.randUniforme() % (peers.size() - sub);
     }
+    else if (pPeer == OLDEST_PEER)
+    {
+        if (origem.tipo() == pessoa::PUBLISHER) p = 0;
+        else p = g.randUniforme() % (peers.size() - sub);
+    }
+    else if (pPeer == NEWEST_PEER)
+    {
+        if (origem.tipo() == pessoa::PUBLISHER)
+        {
+            std::list<pessoa>::iterator it = peers.end();
+            --it;
+            return it;
+        }
+        
+        p = g.randUniforme() % (peers.size() - sub);
+    }
+    else if (pPeer == NEWNEWEST_PEER)
+    {
+        if (origem.tipo() == pessoa::PUBLISHER || g.randUniforme() / (double) g.RANDMAX < 0.125)
+        {
+            std::list<pessoa>::iterator it = peers.end();
+            --it;
+            return it;
+        }
+        
+        p = g.randUniforme() % (peers.size() - sub);
+    }
 
     // Percorre a lista de peers até encontrar o escolhido.
     std::list<pessoa>::iterator it = peers.begin();
