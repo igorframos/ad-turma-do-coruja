@@ -191,9 +191,9 @@ Foram observadas as seguintes variáveis aleatórias ao longo da simulação:
 
 Para cada conjunto de parâmetros foi executada uma simulação diferente utilizando o método \textit{batch}, ou seja, execuções em sequência de modo que os indivíduos remanescentes de uma rodada servem como condição inicial para a rodada seguinte. Como é requisito deste método, a cada peer que chegava era atribuída uma cor de modo que era possível considerar seus dados apenas no momento adequado.
 
-Caso, por exemplo, um indivíduo receba a cor vermelha correspondente à rodada 2 da simulação e sua saída ocorra ainda nesta rodada, seu tempo de permanência influenciará a média da variável $T$, seu tempo de download será icluído na média da variável $D$, sua presença contará para as médias de $N$, $P$ e $S$ e sua saída afetará a variável $V$.
+Caso, por exemplo, um indivíduo receba a cor vermelha correspondente à rodada 2 da simulação e sua saída ocorra ainda nesta rodada, seu tempo de permanência influenciará a média da variável $T$, seu tempo de download será incluído na média da variável $D$, sua presença contará para as médias de $N$, $P$ e $S$ e sua saída afetará a variável $V$.
 
-Por outro lado, caso este mesmo indivíduo termine o download ainda na segunda rodada, mas permaneça como seed posteriormente, seu tempo de permanência não será utilizado em nenhum cálculo. Da mesma forma, sua saída não alterará nehuma vazão, embora sua presença ainda influencie as váriáveis $N$ e $S$ das rodadas seguintes.
+Por outro lado, caso este mesmo indivíduo termine o download ainda na segunda rodada, mas permaneça como seed posteriormente, seu tempo de permanência não será utilizado em nenhum cálculo. Da mesma forma, sua saída não alterará nenhuma vazão, embora sua presença ainda influencie as variáveis $N$ e $S$ das rodadas seguintes.
 
 Ainda, se ele sequer terminar o download antes do fim da rodada 2, ele influenciará $N$, $P$ e $S$ das rodadas seguintes, mas seu tempo de download e seu tempo de permanência serão descartados. Sua saída também não será contada para nenhuma vazão.
 
@@ -227,7 +227,7 @@ Determinar o final da fase transiente é uma tarefa que depende de heurísticas,
 	\end{algorithmic}
 \end{algorithm}
 
-Os valores de $c$, $k$ e $p$ foram determinados expermientalmente através de diversos testes. Optamos, no final, por aqueles que proporcionaram bons resultados sem estender demais a fase transiente, pois deixá-la muito longa significa aumentar o tempo de execução do programa sem a contrapartida de resultados melhores.
+Os valores de $c$, $k$ e $p$ foram determinados experimentalmente através de diversos testes. Optamos, no final, por aqueles que proporcionaram bons resultados sem estender demais a fase transiente, pois deixá-la muito longa significa aumentar o tempo de execução do programa sem a contrapartida de resultados melhores.
 
 Podemos observar o comportamento de algumas variáveis através dos gráficos nas figuras \ref{grafTransienteCen4b02n12rf} e \ref{grafTransienteCen6b10n40rr}. Nestes casos o final da fase transiente foi detectado de maneira satisfatória.
 
@@ -309,7 +309,7 @@ O estimador da média vem diretamente de sua fórmula:
 	\hat{\mu} = {{1} \over {n}} \sum_{i = 1}^n X_i
 \end{equation}
 
-Já o estimador da variância necessita de alguma manipulação na sua fórmula orignal:
+Já o estimador da variância necessita de alguma manipulação na sua fórmula original:
 \begin{align}
 	\hat{\sigma}^2 &= {{1} \over {n - 1}} \sum_{i = 1}^n (X_i - \hat{\mu})^2 \\
 	&= {{1} \over {n - 1}} \sum_{i = 1}^n (X_i^2 - 2 \hat{\mu} X_i + \mu^2) \\
@@ -563,7 +563,7 @@ Unindo as equações \ref{esperancaTransformada} e \ref{transZtransLaplace}, tem
 \end{align}
 \end{proof}
 
-Observando agora as curvas obtidas para os cenários 4 e 6, notamos que reduzir a capacidade de serviço do publisher diminui a vazão do sistema, mas que o efeito desta mudança não é tão acentuado quanto se esperaria caso todas as tranmissões dependessem dele. Uma redução da taxa de envio do publisher à metade levou a vazão a uma redução de aproximadamente 33\% para 25 pessoas presentes no sistema e de cerca de 25\% para 50 pessoas.
+Observando agora as curvas obtidas para os cenários 4 e 6, notamos que reduzir a capacidade de serviço do publisher diminui a vazão d1.002013676762o sistema, mas que o efeito desta mudança não é tão acentuado quanto se esperaria caso todas as transmissões dependessem dele. Uma redução da taxa de envio do publisher à metade levou a vazão a uma redução de aproximadamente 33\% para 25 pessoas presentes no sistema e de cerca de 25\% para 50 pessoas.
 
 À medida em que aumentamos o número de pessoas presentes, é esperado que a capacidade de serviço do publisher tenha cada vez menos influência. Isto porque, com mais pessoas, temos um maior fluxo de dados entre os próprios usuários e o publisher fica responsável por uma fração cada vez menor do tráfego. Desta forma, a diferença entre os cenários 4 e 6 tende a diminuir cada vez mais caso simulemos cenários ainda maiores.
 
@@ -596,9 +596,9 @@ Observando agora as curvas obtidas para os cenários 4 e 6, notamos que reduzir 
 
 Nas figuras \ref{vazao4b2rf}, \ref{vazao5b2rf} e \ref{vazao6b2rf} podemos ver a evolução da vazão com o aumento do número de pessoas no sistema, respectivamente, nos cenários 4, 5 e 6 com seus intervalos de confiança de 95\%.
 
-Nos cenários 4 e 6 é possível notar um aumento efetivo na vazão. Já no cenário 5, ela parece aumentar bem, até que regride e torna a se aproximar do mesmo valor de 1 saída por unidade de tempo ao redor do qual estabilizou-se no cenário de mesmo número com a política \textit{Random peer / Random useful piece}. A melhora observada na presença de seeds deve-se ao fato de que o envio do bloco mais raro faz com que os blocos mais comuns possem a ser enviados pelos outros peers. Com isso, há um melhor direcionamento da capacidade de serviço do publisher e dos seeds e um melhor aproveitamento das transmissões entre peers. No cenário 5, o publisher ainda é responsável por suprir a maior parte da demanda por blocos mais raros e, assim, não é possível um aumento real da vazão deste sistema.
+Nos cenários 4 e 6 é possível notar um aumento efetivo na vazão. Já no cenário 5, ela parece aumentar bem, até que regride e torna a se aproximar do mesmo valor de 1 saída por unidade de tempo ao redor do qual estabilizou-se no cenário de mesmo número com a política \textit{Random peer / Random useful piece}. A melhora observada na presença de seeds deve-se ao fato de que o envio do bloco mais raro faz com que os blocos mais comuns passem a ser enviados pelos outros peers. Com isso, há um melhor direcionamento da capacidade de serviço do publisher e dos seeds e um melhor aproveitamento das transmissões entre peers. No cenário 5, o publisher ainda é responsável por suprir a maior parte da demanda por blocos mais raros e, assim, não é possível um aumento real da vazão deste sistema.
 
-Com esta nova política, a diminuição da capacidade de serviço do publisher teve um efeito ainda menor sobre o sistema como um todo, como podemos perceber ao notar a vazão muito próxima nos cenários 4 e 6. Entendemos que isto se deve ao fato de que, agora, as transmissões entre peers passam a ser mais efecientes, sendo o publisher e os seeds responsáveis apenas por evitar que um determinado bloco não esteja mais presente no sistema. Isso faz com que uma maior quantidade de transmissões entre peers tenha sucesso e equilibra os dois cenários, visto que estes diferenciam-se apenas pela taxa de upload do publisher.
+Com esta nova política, a diminuição da capacidade de serviço do publisher teve um efeito ainda menor sobre o sistema como um todo, como podemos perceber ao notar a vazão muito próxima nos cenários 4 e 6. Entendemos que isto se deve ao fato de que, agora, as transmissões entre peers passam a ser mais eficientes, sendo o publisher e os seeds responsáveis apenas por evitar que um determinado bloco não esteja mais presente no sistema. Isso faz com que uma maior quantidade de transmissões entre peers tenha sucesso e equilibra os dois cenários, visto que estes diferenciam-se apenas pela taxa de upload do publisher.
 
 \pagebreak
 
@@ -727,11 +727,57 @@ Com base nos dados da tabela, não podemos afirmar que existe, de fato, alguma d
 \clearpage
 \pagebreak
 
+\subsection{Desafio: Otimizando o sistema}
+
+Tendo em vista os resultados anteriores, nosso objetivo para escolher políticas de seleção de peers e blocos foi maximizar a utilidade da interação entre os peers. O dois pontos principais para isso foram:
+\begin{enumerate}
+	\item \label{sempreEnviar} Manter os peers sempre tentando enviar blocos
+	\item \label{aproveitarEnvio} Maximizar o aproveitamento das tentativas de transmissão
+\end{enumerate}
+
+Para alcançar o ponto \ref{sempreEnviar}, é necessário que o peer passe a maior parte do tempo em que está no sistema de posse de algum bloco. Caso o peer passe muito tempo sem nenhum bloco, além de estar muito longe de concluir o download, ele não poderá enviar nada e, portanto, não permitirá que o sistema se beneficie de sua capacidade de upload.
+
+Já no sentido de alcançar o ponto \ref{aproveitarEnvio}, é razoável querermos que a distribuição dos blocos entre os peers seja a melhor possível. Esta ideia já vem dos resultados obtidos com a política \textit{Random peer / Rarest first piece}, que mostram uma melhora da velocidade quando as peças raras têm envio prioritário.
+
+Cabe notar aqui que \ref{sempreEnviar} nos sugere uma política de seleção de peer, enquanto \ref{aproveitarEnvio} sugere uma política de seleção de bloco. Decidimos que utilizaríamos a política \textit{Rarest piece first}, pois não conseguimos encontrar saída que parecesse melhor para o problema da escolha do bloco. Ficou, portanto, faltando escolher como seriam escolhidos os peers.
+
+O próprio item \ref{sempreEnviar} já nos leva a imaginar que um peer que chega deve receber rapidamente um bloco. Apesar disso, uma política que se assemelhasse totalmente a uma fila LCFS não parecia promissora. Optamos, então, por diferenciar a forma de envio do publisher da forma de envio dos peers. A função do publisher é suprir rapidamente o bloco mais raro para um peer recém chegado, enquanto os peers estão encarregados de transmitirem o que falta para os outros terminarem o download. Chamamos essa política, de forma nada criativa, de \textit{Newest first peer}.
+
+Experimentalmente, a política \textit{Newest first peer / Rarest first piece} foi a que nos apresentou melhor resultado. Testamos algumas mudanças como fazer com que os peers se comportassem como o publisher com alguma probabilidade, mas nenhuma delas teve um resultado mesmo parecido. Na figura \ref{vazaoPoliticaNova}, pode ser vista a evolução da vazão em função do número de pessoas no sistema.
+
+\begin{center}
+	\begin{table}[h]
+		\caption{Vazão do cenário 5 com população inicial de 50 pessoas de acordo com a política}
+		\label{vazaoPorPolitica}
+		\makebox[\textwidth] 
+		{
+		\begin{tabular}{ | p{3.25cm} | c | p{2.25cm} | p{2.25cm} |  }
+		\hline
+		\textbf{Política} & \textbf{Média} & \textbf{Limite inferior do IC} & \textbf{Limite Superior IC} \\ \hline
+		\textit{Random peer / Random useful piece} & 1,000273939678 & 0,998534202593 & 1,002013676762 \\ \hline
+		\textit{Random peer / Rarest first piece} & 1,021024283678 & 1,018733796930 & 1,023314770425 \\ \hline
+		\textit{Newest first peer / Rarest first piece} & 1,205942388016 & 1,202367432504 & 1,209517343527 \\ \hline
+		\end{tabular}
+		}
+	\end{table}
+\end{center}
+
+\pagebreak
+
+\begin{figure}[h]
+	\caption{Vazão da política \textit{Newest first peer / Rarest first piece} em função do número de pessoas no sistema}
+	\label{vazaoPoliticaNova}
+	\includegraphics[scale = 0.33]{./graficos/politicaNova/01.png}
+\end{figure}
+
+\clearpage
+\pagebreak
+
 \section{Conclusão}
 
 Com base nos dados coletados, pudemos concluir que a presença de seeds no sistema tem um grande efeito sobre a escalabilidade do mesmo. Além disso, pudemos perceber que aumentar o número de blocos também tem um efeito positivo na vazão. Estas observações nos levam a compreender melhor os sistemas \textit{peer-to-peer} que utilizamos com frequência na internet de hoje em dia.
 
-Os resultados apresentados nos chamam a atenção para a necessidade da presença de seeds para que um sistema seja escalável. Isto não é surpreendente, uma vez que, neste caso, o modelo se comporta como uma fila M/M/k. Também a utilização de uma quantidade adquada de blocos pode fazer com que os peers contribuam mais entre si, levando os downloads a terminarem mais rapidamente.
+Os resultados apresentados nos chamam a atenção para a necessidade da presença de seeds para que um sistema seja escalável. Isto não é surpreendente, uma vez que, neste caso, o modelo se comporta como uma fila M/M/k. Também a utilização de uma quantidade adequada de blocos pode fazer com que os peers contribuam mais entre si, levando os downloads a terminarem mais rapidamente.
 
 Uma grande motivação ao longo do desenvolvimento do trabalho foi a possibilidade de observar na prática os resultados teóricos estudados no decorrer do período. Toda a teoria ganha uma nova vida quando aplicada e isto foi uma das coisas que mais nos despertou o interesse.
 
