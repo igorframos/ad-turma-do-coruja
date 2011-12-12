@@ -384,8 +384,9 @@ int main(int argc, char *argv[])
             fprintf (plot, "set output \"log/cen%dlam%.1fCDF.png\"\nplot %s\nunset ylabel\n", cenario, lambda, plotline);
         }
 
-        if (cenario >= 4 && cenario <= 6 && arqInicial == 0)
+        if (cenario >= 3 && cenario <= 6 && arqInicial == 0)
         {
+            printf ("Estou mexendo no arquivo.\n");
             char nome[64];
             sprintf (nome, "log/cen%db%02d%c%cVazao.txt", cenario, numBlocos, politicaPeer, politicaBloco);
             FILE* arq = fopen(nome, "a");
@@ -406,6 +407,11 @@ int main(int argc, char *argv[])
 
     fclose(resultados);
     fclose(plot);
+    
+    char teste[1024];
+    sprintf (teste, "cp log/cen3b01rrVazao.txt vazao3%d.txt", time(NULL));
+
+    system(teste);
 
     return 0;
 }
