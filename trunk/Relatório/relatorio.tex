@@ -189,7 +189,7 @@ Foram observadas as seguintes variáveis aleatórias ao longo da simulação:
 
 \subsection{Método}
 
-Para cada conjunto de parâmetros foi utilizada uma simulação diferente utilizando o método \textit{batch}, ou seja, execuções em sequência de modo que os indivíduos remanescentes de uma rodada servem como condição inicial para a rodada seguinte. Como é requisito deste método, a cada peer que chegava era atribuída uma cor de modo que era possível considerar seus dados apenas no momento adequado.
+Para cada conjunto de parâmetros foi executada uma simulação diferente utilizando o método \textit{batch}, ou seja, execuções em sequência de modo que os indivíduos remanescentes de uma rodada servem como condição inicial para a rodada seguinte. Como é requisito deste método, a cada peer que chegava era atribuída uma cor de modo que era possível considerar seus dados apenas no momento adequado.
 
 Caso, por exemplo, um indivíduo receba a cor vermelha correspondente à rodada 2 da simulação e sua saída ocorra ainda nesta rodada, seu tempo de permanência influenciará a média da variável $T$, seu tempo de download será icluído na média da variável $D$, sua presença contará para as médias de $N$, $P$ e $S$ e sua saída afetará a variável $V$.
 
@@ -201,7 +201,7 @@ Ainda, se ele sequer terminar o download antes do fim da rodada 2, ele influenci
 
 A fase transiente é o período em que o sistema ainda não está em equilíbrio, de forma que os resultados obtidos ao longo dela não são confiáveis e tendem a aumentar a variância e, com isso, aumentar o intervalo de confiança. Nosso objetivo é, portanto, tentar encontrar o seu fim para que possamos desconsiderá-la em nossos resultados.
 
-Determinar o final da fase transiente é uma tarefa que depende de heurísticas, ou seja, não há nenhum método que nos forneça um resultado exato. Tentamos, então, determinar uma heurística que nos desse uma boa aproximação e nossa opção foi dada pelo seguinte algoritmo:
+Determinar o final da fase transiente é uma tarefa que depende de heurísticas, ou seja, não há nenhum método que nos forneça um resultado exato. Tentamos, então, escolher uma heurística que nos desse uma boa aproximação e nossa opção foi pelo seguinte algoritmo:
 
 \begin{algorithm}[H]
 	\caption{Heurística para detecção do final da fase transiente}
@@ -233,7 +233,7 @@ Podemos observar o comportamento de algumas variáveis através dos gráficos na
 
 Na figura \ref{grafTransienteCen4b02n12rf}, a fase transiente foi concluída com 13500 chegadas. Podemos observar que isto ocorre no momento aproximado em que as curvas que representam o número médio de peers no sistema e a média da vazão tornam-se estáveis.
 
-De forma semelhante, na figura \ref{grafTransienteCen6b10n40rr} temos os tempos de download e de permanência aproximando-se de uma estabilidade em um momento próximo das 11500 chegadas, quando a heurística determinou como final da fase transiente.
+De forma semelhante, na figura \ref{grafTransienteCen6b10n40rr} temos os tempos de download e de permanência aproximando-se de uma estabilidade em um momento próximo das 11500 chegadas, momento que a heurística determinou como final da fase transiente.
 
 Apesar do sucesso nestes dois casos, podemos observar nas figuras \ref{grafTransienteCen5b10n43rr} e \ref{grafTransienteCen1lamb0.9} que houve algumas situações em que a fase transiente poderia ter sido estendida, pois ainda havia grande variação nas médias. Na primeira, o fim da fase transiente terminou, para o simulador, após 7500 chegadas e, na segunda, após 49500. Em ambos os casos, podemos notar que se tratava de um período de aparente estabilidade da média, seguido por novas variações acentuadas.
 
@@ -274,7 +274,7 @@ Mesmo com casos como os dois últimos, o resultado final não foi insatisfatóri
 
 Para que os intervalos de confiança sejam pequenos, é preciso que cada rodada tenha um bom tamanho e que o número total de rodadas seja suficientemente grande. Inicialmente, fixamos esses números em 30 rodadas com 5000 chegadas cada, mas alguns intervalos ainda estavam grandes demais e decidimos passar a 100 rodadas.
 
-Posteriormente, aumentamos o tamanho de cada rodada para 10000 chegadas quando buscávamos o motivo de um determinado resultado não seguir padrão que esperávamos. Mesmo tendo resolvido esta questão de outra forma, optamos por manter, no final, um total de 100 rodadas com 10000 chegadas cada.
+Posteriormente, aumentamos o tamanho de cada rodada para 10000 chegadas quando buscávamos o motivo de um dos resultados não seguir o padrão que esperávamos. Mesmo tendo resolvido esta questão de outra forma, optamos por manter, no final, um total de 100 rodadas com 10000 chegadas cada.
 
 Adicionalmente, no caso improvável de algum intervalo de confiança ser maior do que 10\%, são executadas novas rodadas até que esta condição seja satisfeita. Esta precaução mostrou-se desnecessária, visto que nenhuma simulação ultrapassou 100 rodadas.
 
@@ -282,7 +282,7 @@ Adicionalmente, no caso improvável de algum intervalo de confiança ser maior d
 
 \section{Testes de Corretude}\label{TestesDeCorretude}
 
-Para testar nossa implementação, comparamos a saída do simulador com resultados que poderíamos obter analiticamente. Desta forma, fomos capazes de concluir quando o programa estava muito próximo de estar correto.
+Para testar nossa implementação, comparamos a saída do simulador com resultados que poderíamos obter analiticamente. Desta forma, fomos capazes de concluir quando o programa estava muito próximo de estar correto. Em alguns momentos, também utilizamos fórmulas conhecidas para obter valores para algumas variáveis em função de outras, a fim de confirmar que os resultados eram coerentes entre si.
 
 O cenário 1 proposto na descrição do trabalho representa exatamente uma M/M/1, visto que temos o arquivo com apenas um bloco, chegadas de peers seguindo um processo Poisson e a ausência total de seeds ou chegadas por recomendação. Dado que a disciplina de atendimento não afeta a média das variáveis observadas, podemos calcular analiticamente todos os resultados e compará-los com a saída da simulação. Com isso, pudemos executar o ajuste inicial do programa.
 
@@ -302,7 +302,7 @@ Terminamos por descobrir que, quando um peer chegava por recomendação, ele nã
 
 \subsection{Cálculo de estimadores}
 
-Para calcular os estimadores da média ($\hat{\mu}$) e do intervalo de confiança ($\hat{\sigma}$), são armazenados a soma das médias ($\sum_{i = 1}^n X_i$) e dos quadrados das médias ($\sum_{i = 1}^n X_ i^2$) de cada variável aleatória ao longo das rodadas. Desta forma, podemos obter ambos os estimadores.
+Para calcular os estimadores da média ($\hat{\mu}$) e do desvio padrão ($\hat{\sigma}$), são armazenados a soma das médias ($\sum_{i = 1}^n X_i$) e dos quadrados das médias ($\sum_{i = 1}^n X_ i^2$) de cada variável aleatória ao longo das rodadas. Desta forma, podemos obter ambos os estimadores.
 
 O estimador da média vem diretamente de sua fórmula:
 \begin{equation}\label{estimadorMedia}
@@ -311,7 +311,7 @@ O estimador da média vem diretamente de sua fórmula:
 
 Já o estimador da variância necessita de alguma manipulação na sua fórmula orignal:
 \begin{align}
-	\hat{\sigma} &= {{1} \over {n - 1}} \sum_{i = 1}^n (X_i - \hat{\mu})^2 \\
+	\hat{\sigma}^2 &= {{1} \over {n - 1}} \sum_{i = 1}^n (X_i - \hat{\mu})^2 \\
 	&= {{1} \over {n - 1}} \sum_{i = 1}^n (X_i^2 - 2 \hat{\mu} X_i + \mu^2) \\
 	&= {{1} \over {n - 1}} \left[ \sum_{i = 1}^n X_i^2 - 2 \hat{\mu} \sum_{i = 1}^n X_i + \sum_{i = 1}^n \hat{\mu}^2 \right] \\
 	&= {{1} \over {n - 1}} \left[ \sum_{i = 1}^n X_i^2 - 2 \hat{\mu} \sum_{i = 1}^n X_i + n \hat{\mu}^2 \right] \\
@@ -342,9 +342,9 @@ Podemos observar na tabela \ref{tabPMFlamb0.5} que, para $k = 17$, temos um valo
 
 Na tabela \ref{tabTempoDownloadCen1e2}, temos os tempos médios de download com seus respectivos intervalos de confiança. Em seguida temos as figuras \ref{figCDFcen1lamb0.1}, \ref{figCDFcen1lamb0.5}, \ref{figCDFcen1lamb0.9}, \ref{figCDFcen2lamb0.1}, \ref{figCDFcen2lamb0.5} e \ref{figCDFcen2lamb0.9} com os gráficos contendo a CDF do tempo de download em cada rodada para os conjuntos de parâmetros da tabela. Através das CDFs, calculamos as medianas do tempo de download, exibidas na tabela \ref{tabMedianaTempoDownload}.
 
-Observando os resultados do parágrafo anterior, podemos concluir que a presença de usuários como seeds no sistema torna o tempo de download menor. Isto se deve ao fato de que um seed, apesar de mais lento, permitirá que mais peers sejam servidos além da capacidade do servidor.
+Observando os resultados do parágrafo anterior, podemos concluir que a presença de usuários como seeds no sistema torna o tempo de download menor. Isto se deve ao fato de que um seed, apesar de mais lento, permitirá que mais peers sejam servidos além da capacidade do publisher.
 
-O último cenário com apenas um bloco é o de número 3. Como trata-se de um sistema fechado, podemos avaliar a vazão como métrica de eficiência. Isto não pode ser feito nos cenários 1 e 2 porque a taxa de saída não pode ser outra que não a taxa de entrada uma vez que o sistema entre em equilíbrio. O gráfico que coloca a vazão em função do número de pessoas no sistema pode ser visto na figura \ref{vazaoCen3}. Nota-se que o sistema não é escalável, pois, sendo o publisher o único responsável por enviar o arquivo, a vazão máxima fica limitada por sua capacidade de envio.
+O último cenário com apenas um bloco é o de número 3. Como trata-se de um sistema fechado, podemos avaliar a vazão como métrica de eficiência. Isto não pode ser feito nos cenários 1 e 2 porque a taxa de saída não pode ser outra que não a taxa de entrada uma vez que o sistema entre em equilíbrio. O gráfico que coloca a vazão em função do número de pessoas no sistema pode ser visto na figura \ref{vazaoCen3}. Nota-se que o sistema não é escalável, pois, sendo o publisher o único responsável por enviar o arquivo, a vazão máxima fica limitada por sua capacidade de upload.
 
 \pagebreak
 
@@ -538,7 +538,7 @@ O último cenário com apenas um bloco é o de número 3. Como trata-se de um si
 
 Nas figuras \ref{vazao4b2rr}, \ref{vazao5b2rr} e \ref{vazao6b2rr} podemos ver a evolução da vazão com o aumento do número de pessoas no sistema, respectivamente, nos cenários 4, 5 e 6 com seus intervalos de confiança de 95\%.
 
-Comparando as curvas correspondentes aos cenários 4 e 5, podemos observar que a presença de seeds influencia a escalabilidade do sistema, mesmo os peers transmitindo blocos entre si. No primeiro cenário, podemos ver que a vazão cresce com o número de usuários até o limite desta simulação, enquanto no cenário 5 o ela estabiliza em torno de 1 saída por unidade de tempo. É notável o fato de que isto acontece mesmo que, em razão do seu tempo de permanência no sistema, a média seja de apenas 1 transmissão por seed.
+Comparando as curvas correspondentes aos cenários 4 e 5, podemos observar que a presença de seeds influencia a escalabilidade do sistema, mesmo os peers transmitindo blocos entre si. No primeiro cenário, podemos ver que a vazão cresce com o número de usuários até o limite desta simulação, enquanto no cenário 5 ela estabiliza em torno de 1 saída por unidade de tempo. É notável o fato de que isto acontece mesmo que, em razão do seu tempo de permanência no sistema, a média seja de apenas 1 transmissão por seed.
 
 \begin{proof}
 
@@ -563,7 +563,7 @@ Unindo as equações \ref{esperancaTransformada} e \ref{transZtransLaplace}, tem
 \end{align}
 \end{proof}
 
-Observando, agora, as curvas obtidas para os cenários 4 e 6, que reduzir a capacidade de serviço do publisher diminui a vazão do sistema, mas que o efeito desta mudança não é tão acentuado quanto se esperaria caso todas as tranmissões dependessem dele. Uma redução da taxa de envio do publisher à metade levou a vazão a uma redução de aproximadamente 33\% para 25 pessoas presentes no sistema e de cerca de 25\% para 50 pessoas.
+Observando agora as curvas obtidas para os cenários 4 e 6, notamos que reduzir a capacidade de serviço do publisher diminui a vazão do sistema, mas que o efeito desta mudança não é tão acentuado quanto se esperaria caso todas as tranmissões dependessem dele. Uma redução da taxa de envio do publisher à metade levou a vazão a uma redução de aproximadamente 33\% para 25 pessoas presentes no sistema e de cerca de 25\% para 50 pessoas.
 
 À medida em que aumentamos o número de pessoas presentes, é esperado que a capacidade de serviço do publisher tenha cada vez menos influência. Isto porque, com mais pessoas, temos um maior fluxo de dados entre os próprios usuários e o publisher fica responsável por uma fração cada vez menor do tráfego. Desta forma, a diferença entre os cenários 4 e 6 tende a diminuir cada vez mais caso simulemos cenários ainda maiores.
 
@@ -598,7 +598,7 @@ Nas figuras \ref{vazao4b2rf}, \ref{vazao5b2rf} e \ref{vazao6b2rf} podemos ver a 
 
 Nos cenários 4 e 6 é possível notar um aumento efetivo na vazão. Já no cenário 5, ela parece aumentar bem, até que regride e torna a se aproximar do mesmo valor de 1 saída por unidade de tempo ao redor do qual estabilizou-se no cenário de mesmo número com a política \textit{Random peer / Random useful piece}. A melhora observada na presença de seeds deve-se ao fato de que o envio do bloco mais raro faz com que os blocos mais comuns possem a ser enviados pelos outros peers. Com isso, há um melhor direcionamento da capacidade de serviço do publisher e dos seeds e um melhor aproveitamento das transmissões entre peers. No cenário 5, o publisher ainda é responsável por suprir a maior parte da demanda por blocos mais raros e, assim, não é possível um aumento real da vazão deste sistema.
 
-Com esta nova política, a diminuição da capacidade de serviço do publisher teve um efeito ainda menor sobre o sistema como um todo, como podemos perceber ao notar a vazão muito próxima nos cenários 4 e 6. Entendemos que isto se deve ao fato de que, agora, as transmissões entre peers passam a ser mais efecientes, sendo o publisher e os seeds responsáveis apenas por evitar que um determinado bloco não esteja mais presente no sistema. Isso faz com que uma maior quantidade de transmissões entre peers tenha sucesso, o que equilibra os dois cenários, visto que estes diferenciam-se apenas pela taxa de upload do publisher.
+Com esta nova política, a diminuição da capacidade de serviço do publisher teve um efeito ainda menor sobre o sistema como um todo, como podemos perceber ao notar a vazão muito próxima nos cenários 4 e 6. Entendemos que isto se deve ao fato de que, agora, as transmissões entre peers passam a ser mais efecientes, sendo o publisher e os seeds responsáveis apenas por evitar que um determinado bloco não esteja mais presente no sistema. Isso faz com que uma maior quantidade de transmissões entre peers tenha sucesso e equilibra os dois cenários, visto que estes diferenciam-se apenas pela taxa de upload do publisher.
 
 \pagebreak
 
@@ -729,11 +729,13 @@ Com base nos dados da tabela, não podemos afirmar que existe, de fato, alguma d
 
 \section{Conclusão}
 
-Com base nos dados coletados, pudemos concluir que a presença de seeds no sistema tem um grande efeito sobre a escalabilidade do sistema. Além disso, pudemos perceber que aumentar o número de blocos também tem um efeito positivo na vazão do mesmo. Estas observações nos levam a compreender melhor os sistemas \textit{peer-to-peer} que utilizamos com frequência na internet de hoje em dia.
+Com base nos dados coletados, pudemos concluir que a presença de seeds no sistema tem um grande efeito sobre a escalabilidade do mesmo. Além disso, pudemos perceber que aumentar o número de blocos também tem um efeito positivo na vazão. Estas observações nos levam a compreender melhor os sistemas \textit{peer-to-peer} que utilizamos com frequência na internet de hoje em dia.
 
-Entendemos que o modelo proposto pelo trabalho é bastante simplificado, mas acreditamos que as observações e dados aqui expostos têm grande valia para a compreensão total da realidade. A tarefa foi, portanto, bastante enriquecedora.
+Os resultados apresentados nos chamam a atenção para a necessidade da presença de seeds para que um sistema seja escalável. Isto não é surpreendente, uma vez que, neste caso, o modelo se comporta como uma fila M/M/k. Também a utilização de uma quantidade adquada de blocos pode fazer com que os peers contribuam mais entre si, levando os downloads a terminarem mais rapidamente.
 
-Uma grande motivação ao longo do desenvolvimento do trabalho foi a possibilidade de observar na prática os resultados teóricos estudados no decorrer do período. Toda a teoria ganha uma nova cara quando aplicada e isto foi uma das coisas que mais nos despertou o interesse.
+Uma grande motivação ao longo do desenvolvimento do trabalho foi a possibilidade de observar na prática os resultados teóricos estudados no decorrer do período. Toda a teoria ganha uma nova vida quando aplicada e isto foi uma das coisas que mais nos despertou o interesse.
+
+Entendemos, porém, que o modelo proposto pelo trabalho é bastante simplificado, mas ainda acreditamos que as observações e dados aqui expostos têm grande valia para a compreensão total da realidade. A tarefa foi, portanto, bastante enriquecedora.
 
 \pagebreak
 
