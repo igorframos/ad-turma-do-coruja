@@ -15,6 +15,6 @@
 #include "eventoSaidaSeed.h"
 #include "eventoTransmissao.h"
 #include "eventoChegadaPeer.h"
-#include "filaEventos.h"
+#include "simulador.h"
 #include "geradorAleatorio.h"
 
