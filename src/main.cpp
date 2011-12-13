@@ -48,12 +48,12 @@ int main(int argc, char *argv[])
         ba = fscanf (cenarios, "%lf %lf %lf %d", &U, &gamma, &pRec, &populacaoInicial); ++ba;
         ba = fscanf (cenarios, " %c %c %u", &politicaPeer, &politicaBloco, &arqInicial); ++ba;
 
-        if (politicaPeer == 'r') pPeer = filaEventos::RANDOM_PEER;
-        else if (politicaPeer == 'o') pPeer = filaEventos::OLDEST_PEER;
-        else if (politicaPeer == 'n') pPeer = filaEventos::NEWEST_PEER;
-        else if (politicaPeer == 'm') pPeer = filaEventos::NEWNEWEST_PEER;
-        if (politicaBloco == 'r') pBloco = filaEventos::RANDOM_PIECE;
-        else pBloco = filaEventos::RAREST_FIRST;
+        if (politicaPeer == 'r') pPeer = simulador::RANDOM_PEER;
+        else if (politicaPeer == 'o') pPeer = simulador::OLDEST_PEER;
+        else if (politicaPeer == 'n') pPeer = simulador::NEWEST_PEER;
+        else if (politicaPeer == 'm') pPeer = simulador::NEWNEWEST_PEER;
+        if (politicaBloco == 'r') pBloco = simulador::RANDOM_PIECE;
+        else pBloco = simulador::RAREST_FIRST;
 
         // Inicializações de variáveis de classe do tipo pessoa.
         evento::nextId = 0;
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 
 
         // Chama o construtor do simulador de um cenário.
-        filaEventos f(1/lambda, 1/mu, 1/gamma, 1/U, pRec, pPeer, pBloco, populacaoInicial, arqInicial, arqOut);
+        simulador f(1/lambda, 1/mu, 1/gamma, 1/U, pRec, pPeer, pBloco, populacaoInicial, arqInicial, arqOut);
 
         // Essas são as variáveis usadas nos cálculos de intervalos de confiança.
         // var tem a soma das rodadas, var2 a soma dos quadrados das rodadas,
