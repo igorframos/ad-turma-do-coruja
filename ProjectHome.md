@@ -1,0 +1,1 @@
+Trabalho de simulação de uma rede P2P para a disciplina Avaliação e Desempenho em 2011/2 por Gabriel Pires, Igor Ramos e Renan Garrot.
